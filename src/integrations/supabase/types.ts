@@ -14,7 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      drinks: {
+        Row: {
+          brand: string | null
+          created_at: string
+          date_added: string
+          id: string
+          location: string | null
+          name: string
+          notes: string | null
+          price: number | null
+          rating: number | null
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          brand?: string | null
+          created_at?: string
+          date_added?: string
+          id?: string
+          location?: string | null
+          name: string
+          notes?: string | null
+          price?: number | null
+          rating?: number | null
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          brand?: string | null
+          created_at?: string
+          date_added?: string
+          id?: string
+          location?: string | null
+          name?: string
+          notes?: string | null
+          price?: number | null
+          rating?: number | null
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
