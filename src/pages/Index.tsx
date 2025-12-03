@@ -1,5 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useDrinks } from '@/hooks/useDrinks';
+import { useAuth } from '@/hooks/useAuth';
 import { DrinkType, Drink } from '@/types/drink';
 import { DrinkCard } from '@/components/DrinkCard';
 import { DrinkTypeFilter } from '@/components/DrinkTypeFilter';
@@ -7,10 +9,18 @@ import { SearchBar } from '@/components/SearchBar';
 import { AddDrinkDialog } from '@/components/AddDrinkDialog';
 import { EmptyState } from '@/components/EmptyState';
 import { Button } from '@/components/ui/button';
-import { Plus, GlassWater } from 'lucide-react';
+import { Plus, GlassWater, LogOut, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 const Index = () => {
+  const { user, isLoading: authLoading, signOut } = useAuth();
+  const navigate = useNavigate();
   const { drinks, isLoading, addDrink, updateDrink, deleteDrink, filterDrinks } = useDrinks();
   const [selectedType, setSelectedType] = useState<DrinkType | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -18,18 +28,24 @@ const Index = () => {
   const [editingDrink, setEditingDrink] = useState<Drink | null>(null);
   const { toast } = useToast();
 
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate('/auth');
+    }
+  }, [user, authLoading, navigate]);
+
   const filteredDrinks = filterDrinks(selectedType ?? undefined, searchQuery);
   const hasFilters = !!selectedType || !!searchQuery;
 
-  const handleSave = (drinkData: Omit<Drink, 'id' | 'dateAdded'>) => {
+  const handleSave = async (drinkData: Omit<Drink, 'id' | 'dateAdded'>) => {
     if (editingDrink) {
-      updateDrink(editingDrink.id, drinkData);
+      await updateDrink(editingDrink.id, drinkData);
       toast({
         title: 'Drink updated',
         description: `${drinkData.name} has been updated.`,
       });
     } else {
-      addDrink(drinkData);
+      await addDrink(drinkData);
       toast({
         title: 'Drink added',
         description: `${drinkData.name} has been added to your collection.`,
@@ -43,9 +59,9 @@ const Index = () => {
     setDialogOpen(true);
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     const drink = drinks.find(d => d.id === id);
-    deleteDrink(id);
+    await deleteDrink(id);
     toast({
       title: 'Drink removed',
       description: `${drink?.name} has been removed from your collection.`,
@@ -64,12 +80,24 @@ const Index = () => {
     }
   };
 
-  if (isLoading) {
+  const handleSignOut = async () => {
+    await signOut();
+    toast({
+      title: 'Signed out',
+      description: 'You have been signed out successfully.',
+    });
+  };
+
+  if (authLoading || isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-pulse text-muted-foreground">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
+  }
+
+  if (!user) {
+    return null;
   }
 
   return (
@@ -92,10 +120,31 @@ const Index = () => {
               </div>
             </div>
 
-            <Button variant="glow" onClick={() => setDialogOpen(true)}>
-              <Plus className="w-4 h-4" />
-              <span className="hidden sm:inline">Add Drink</span>
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button variant="glow" onClick={() => setDialogOpen(true)}>
+                <Plus className="w-4 h-4" />
+                <span className="hidden sm:inline">Add Drink</span>
+              </Button>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="text-muted-foreground">
+                    <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-sm font-medium text-primary">
+                      {user.email?.charAt(0).toUpperCase()}
+                    </div>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <div className="px-2 py-1.5 text-sm text-muted-foreground truncate">
+                    {user.email}
+                  </div>
+                  <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Sign out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
         </div>
       </header>

@@ -1,94 +1,140 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Drink, DrinkType } from '@/types/drink';
-
-const STORAGE_KEY = 'drink-tracker-drinks';
-
-const sampleDrinks: Drink[] = [
-  {
-    id: '1',
-    name: 'Lagavulin 16',
-    type: 'whiskey',
-    brand: 'Lagavulin',
-    rating: 5,
-    notes: 'Incredible smoky, peaty flavor. Perfect for a cold evening. Long finish with hints of seaweed and iodine.',
-    location: 'The Whiskey Bar, NYC',
-    price: '$18/pour',
-    dateAdded: new Date('2024-01-15'),
-  },
-  {
-    id: '2',
-    name: 'Heady Topper',
-    type: 'beer',
-    brand: 'The Alchemist',
-    rating: 5,
-    notes: 'Best DIPA I\'ve ever had. Juicy, hoppy, no bitterness. Drink from the can!',
-    location: 'Vermont trip',
-    dateAdded: new Date('2024-02-20'),
-  },
-  {
-    id: '3',
-    name: 'Château Margaux 2015',
-    type: 'wine',
-    brand: 'Château Margaux',
-    rating: 5,
-    notes: 'Exceptional Bordeaux. Elegant tannins, black currant, violet notes. Worth the splurge.',
-    price: '$45/glass',
-    dateAdded: new Date('2024-03-10'),
-  },
-  {
-    id: '4',
-    name: 'Paper Plane',
-    type: 'cocktail',
-    rating: 4,
-    notes: 'Equal parts bourbon, Aperol, Amaro Nonino, lemon. Perfectly balanced bitter-sweet.',
-    location: 'Death & Co',
-    dateAdded: new Date('2024-03-25'),
-  },
-];
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 
 export function useDrinks() {
   const [drinks, setDrinks] = useState<Drink[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { user } = useAuth();
 
-  useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      setDrinks(parsed.map((d: Drink) => ({ ...d, dateAdded: new Date(d.dateAdded) })));
+  const fetchDrinks = useCallback(async () => {
+    if (!user) {
+      setDrinks([]);
+      setIsLoading(false);
+      return;
+    }
+
+    setIsLoading(true);
+    const { data, error } = await supabase
+      .from('drinks')
+      .select('*')
+      .order('date_added', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching drinks:', error);
     } else {
-      setDrinks(sampleDrinks);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(sampleDrinks));
+      setDrinks(
+        (data || []).map((d) => ({
+          id: d.id,
+          name: d.name,
+          type: d.type as DrinkType,
+          brand: d.brand || undefined,
+          rating: d.rating || 0,
+          notes: d.notes || undefined,
+          location: d.location || undefined,
+          price: d.price ? `$${d.price}` : undefined,
+          dateAdded: new Date(d.date_added),
+        }))
+      );
     }
     setIsLoading(false);
-  }, []);
+  }, [user]);
 
-  const saveDrinks = (newDrinks: Drink[]) => {
-    setDrinks(newDrinks);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(newDrinks));
-  };
+  useEffect(() => {
+    fetchDrinks();
+  }, [fetchDrinks]);
 
-  const addDrink = (drink: Omit<Drink, 'id' | 'dateAdded'>) => {
+  const addDrink = async (drink: Omit<Drink, 'id' | 'dateAdded'>) => {
+    if (!user) return null;
+
+    const priceValue = drink.price?.replace(/[^0-9.]/g, '') || null;
+
+    const { data, error } = await supabase
+      .from('drinks')
+      .insert({
+        user_id: user.id,
+        name: drink.name,
+        type: drink.type,
+        brand: drink.brand || null,
+        rating: drink.rating,
+        notes: drink.notes || null,
+        location: drink.location || null,
+        price: priceValue ? parseFloat(priceValue) : null,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error adding drink:', error);
+      return null;
+    }
+
     const newDrink: Drink = {
-      ...drink,
-      id: crypto.randomUUID(),
-      dateAdded: new Date(),
+      id: data.id,
+      name: data.name,
+      type: data.type as DrinkType,
+      brand: data.brand || undefined,
+      rating: data.rating || 0,
+      notes: data.notes || undefined,
+      location: data.location || undefined,
+      price: data.price ? `$${data.price}` : undefined,
+      dateAdded: new Date(data.date_added),
     };
-    saveDrinks([newDrink, ...drinks]);
+
+    setDrinks((prev) => [newDrink, ...prev]);
     return newDrink;
   };
 
-  const updateDrink = (id: string, updates: Partial<Drink>) => {
-    saveDrinks(drinks.map(d => d.id === id ? { ...d, ...updates } : d));
+  const updateDrink = async (id: string, updates: Partial<Drink>) => {
+    const priceValue = updates.price?.replace(/[^0-9.]/g, '') || null;
+
+    const { error } = await supabase
+      .from('drinks')
+      .update({
+        name: updates.name,
+        type: updates.type,
+        brand: updates.brand || null,
+        rating: updates.rating,
+        notes: updates.notes || null,
+        location: updates.location || null,
+        price: priceValue ? parseFloat(priceValue) : null,
+      })
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error updating drink:', error);
+      return;
+    }
+
+    setDrinks((prev) =>
+      prev.map((d) =>
+        d.id === id
+          ? {
+              ...d,
+              ...updates,
+            }
+          : d
+      )
+    );
   };
 
-  const deleteDrink = (id: string) => {
-    saveDrinks(drinks.filter(d => d.id !== id));
+  const deleteDrink = async (id: string) => {
+    const { error } = await supabase.from('drinks').delete().eq('id', id);
+
+    if (error) {
+      console.error('Error deleting drink:', error);
+      return;
+    }
+
+    setDrinks((prev) => prev.filter((d) => d.id !== id));
   };
 
   const filterDrinks = (type?: DrinkType, searchQuery?: string) => {
-    return drinks.filter(drink => {
+    return drinks.filter((drink) => {
       const matchesType = !type || drink.type === type;
-      const matchesSearch = !searchQuery || 
+      const matchesSearch =
+        !searchQuery ||
         drink.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         drink.brand?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         drink.notes?.toLowerCase().includes(searchQuery.toLowerCase());
