@@ -1,6 +1,7 @@
 import { DrinkType, drinkTypeLabels, drinkTypeIcons } from '@/types/drink';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { useHaptics } from '@/hooks/useHaptics';
 
 interface DrinkTypeFilterProps {
   selectedType: DrinkType | null;
@@ -10,6 +11,15 @@ interface DrinkTypeFilterProps {
 const types: (DrinkType | null)[] = [null, 'whiskey', 'beer', 'wine', 'cocktail', 'other'];
 
 export function DrinkTypeFilter({ selectedType, onSelectType }: DrinkTypeFilterProps) {
+  const { selectionChanged } = useHaptics();
+
+  const handleSelect = (type: DrinkType | null) => {
+    if (type !== selectedType) {
+      selectionChanged();
+    }
+    onSelectType(type);
+  };
+
   return (
     <div className="flex flex-wrap gap-2">
       {types.map((type) => (
@@ -17,7 +27,7 @@ export function DrinkTypeFilter({ selectedType, onSelectType }: DrinkTypeFilterP
           key={type ?? 'all'}
           variant={selectedType === type ? 'default' : 'outline'}
           size="sm"
-          onClick={() => onSelectType(type)}
+          onClick={() => handleSelect(type)}
           className={cn(
             'transition-all duration-200',
             selectedType === type && 'shadow-glow'
@@ -30,3 +40,4 @@ export function DrinkTypeFilter({ selectedType, onSelectType }: DrinkTypeFilterP
     </div>
   );
 }
+
