@@ -30,11 +30,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useHaptics } from '@/hooks/useHaptics';
-import { Camera, X, Loader2, ImagePlus, Search, Sparkles } from 'lucide-react';
+import { Camera, X, Loader2, ImagePlus, Search, Sparkles, ChevronDown } from 'lucide-react';
 import { takePhoto, pickFromGallery, dataUrlToBlob } from '@/hooks/useCamera';
 import { Capacitor } from '@capacitor/core';
 import { toast } from 'sonner';
@@ -69,6 +74,7 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink, defaultT
     priceRange?: string | null;
     suggestions?: string | null;
   } | null>(null);
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const prevOpenRef = useRef(false);
 
@@ -87,6 +93,8 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink, defaultT
         setLocation(editDrink.location || '');
         setPrice(editDrink.price || '');
         setImageUrl(editDrink.imageUrl);
+        // Expand details if any optional field has data
+        setDetailsOpen(!!(editDrink.brand || editDrink.notes || editDrink.location || editDrink.price || editDrink.imageUrl));
       } else {
         setName('');
         setType(defaultType);
@@ -96,6 +104,7 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink, defaultT
         setLocation('');
         setPrice('');
         setImageUrl(undefined);
+        setDetailsOpen(false);
       }
     }
   }, [editDrink, open, defaultType]);
@@ -110,6 +119,7 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink, defaultT
     setPrice('');
     setImageUrl(undefined);
     setLookupInfo(null);
+    setDetailsOpen(false);
   }, [defaultType]);
 
   const handleLookup = async () => {
@@ -254,52 +264,58 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink, defaultT
 
   const formContent = (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor="name">Name *</Label>
-          <div className="flex gap-2">
-            <Input
-              id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="e.g., Lagavulin 16"
-              required
-              className="bg-secondary/50 flex-1"
-            />
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              onClick={handleLookup}
-              disabled={isLookingUp || !name.trim()}
-              title="Look up drink info"
-            >
-              {isLookingUp ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Search className="w-4 h-4" />
-              )}
-            </Button>
-          </div>
+      {/* Essential Fields */}
+      <div className="space-y-2">
+        <Label htmlFor="name">Name *</Label>
+        <div className="flex gap-2">
+          <Input
+            id="name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="e.g., Lagavulin 16"
+            required
+            className="bg-secondary/50 flex-1"
+          />
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            onClick={handleLookup}
+            disabled={isLookingUp || !name.trim()}
+            title="Look up drink info"
+          >
+            {isLookingUp ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Search className="w-4 h-4" />
+            )}
+          </Button>
         </div>
+      </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="type">Type</Label>
-          <Select value={type} onValueChange={(v) => setType(v as DrinkType)}>
-            <SelectTrigger className="bg-secondary/50">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="bg-popover">
-              {drinkTypes.map((t) => (
-                <SelectItem key={t} value={t}>
-                  <span className="flex items-center gap-2">
-                    <span>{drinkTypeIcons[t]}</span>
-                    <span>{drinkTypeLabels[t]}</span>
-                  </span>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+      <div className="space-y-2">
+        <Label htmlFor="type">Type</Label>
+        <Select value={type} onValueChange={(v) => setType(v as DrinkType)}>
+          <SelectTrigger className="bg-secondary/50">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent className="bg-popover">
+            {drinkTypes.map((t) => (
+              <SelectItem key={t} value={t}>
+                <span className="flex items-center gap-2">
+                  <span>{drinkTypeIcons[t]}</span>
+                  <span>{drinkTypeLabels[t]}</span>
+                </span>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="space-y-2">
+        <Label>Rating</Label>
+        <div className="pt-1">
+          <StarRating rating={rating} onChange={setRating} size="lg" />
         </div>
       </div>
 
@@ -334,59 +350,95 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink, defaultT
         </div>
       )}
 
-      <div className="space-y-2">
-        <Label htmlFor="brand">Brand / Producer</Label>
-        <Input
-          id="brand"
-          value={brand}
-          onChange={(e) => setBrand(e.target.value)}
-          placeholder="e.g., Lagavulin, The Alchemist"
-          className="bg-secondary/50"
-        />
-      </div>
+      {/* Collapsible More Details */}
+      <Collapsible open={detailsOpen} onOpenChange={setDetailsOpen}>
+        <CollapsibleTrigger asChild>
+          <button
+            type="button"
+            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors w-full py-2"
+          >
+            <ChevronDown className={`w-4 h-4 transition-transform ${detailsOpen ? 'rotate-180' : ''}`} />
+            <span>{detailsOpen ? 'Less details' : 'More details'}</span>
+            {!detailsOpen && (brand || notes || location || price || imageUrl) && (
+              <span className="text-xs text-primary">(has data)</span>
+            )}
+          </button>
+        </CollapsibleTrigger>
+        <CollapsibleContent className="space-y-4 pt-2">
+          <div className="space-y-2">
+            <Label htmlFor="brand">Brand / Producer</Label>
+            <Input
+              id="brand"
+              value={brand}
+              onChange={(e) => setBrand(e.target.value)}
+              placeholder="e.g., Lagavulin, The Alchemist"
+              className="bg-secondary/50"
+            />
+          </div>
 
-      <div className="space-y-2">
-        <Label>Rating</Label>
-        <div className="pt-1">
-          <StarRating rating={rating} onChange={setRating} size="lg" />
-        </div>
-      </div>
+          <div className="space-y-2">
+            <Label htmlFor="notes">Tasting Notes</Label>
+            <Textarea
+              id="notes"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="What did you like about it? Flavor profile, aromas..."
+              rows={2}
+              className="bg-secondary/50 resize-none"
+            />
+          </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="notes">Tasting Notes</Label>
-        <Textarea
-          id="notes"
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          placeholder="What did you like about it? Flavor profile, aromas..."
-          rows={2}
-          className="bg-secondary/50 resize-none"
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label>Photo</Label>
-        <div className="flex items-center gap-3">
-          {imageUrl ? (
-            <div className="relative">
-              <img
-                src={imageUrl}
-                alt="Drink preview"
-                className="w-16 h-16 object-cover rounded-lg border border-border"
-              />
-              <button
-                type="button"
-                onClick={removeImage}
-                className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1 hover:bg-destructive/90"
-              >
-                <X className="w-3 h-3" />
-              </button>
-            </div>
-          ) : isNative ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
+          <div className="space-y-2">
+            <Label>Photo</Label>
+            <div className="flex items-center gap-3">
+              {imageUrl ? (
+                <div className="relative">
+                  <img
+                    src={imageUrl}
+                    alt="Drink preview"
+                    className="w-16 h-16 object-cover rounded-lg border border-border"
+                  />
+                  <button
+                    type="button"
+                    onClick={removeImage}
+                    className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1 hover:bg-destructive/90"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              ) : isNative ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      type="button"
+                      disabled={isUploading}
+                      className="w-16 h-16 border-2 border-dashed border-border rounded-lg flex flex-col items-center justify-center gap-1 text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors disabled:opacity-50"
+                    >
+                      {isUploading ? (
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                      ) : (
+                        <>
+                          <Camera className="w-5 h-5" />
+                          <span className="text-xs">Add</span>
+                        </>
+                      )}
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="bg-popover z-[60]">
+                    <DropdownMenuItem onClick={handleTakePhoto}>
+                      <Camera className="w-4 h-4 mr-2" />
+                      Take Photo
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handlePickFromGallery}>
+                      <ImagePlus className="w-4 h-4 mr-2" />
+                      Choose from Gallery
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
                 <button
                   type="button"
+                  onClick={() => fileInputRef.current?.click()}
                   disabled={isUploading}
                   className="w-16 h-16 border-2 border-dashed border-border rounded-lg flex flex-col items-center justify-center gap-1 text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors disabled:opacity-50"
                 >
@@ -399,68 +451,42 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink, defaultT
                     </>
                   )}
                 </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="bg-popover z-[60]">
-                <DropdownMenuItem onClick={handleTakePhoto}>
-                  <Camera className="w-4 h-4 mr-2" />
-                  Take Photo
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handlePickFromGallery}>
-                  <ImagePlus className="w-4 h-4 mr-2" />
-                  Choose from Gallery
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : (
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isUploading}
-              className="w-16 h-16 border-2 border-dashed border-border rounded-lg flex flex-col items-center justify-center gap-1 text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors disabled:opacity-50"
-            >
-              {isUploading ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
-              ) : (
-                <>
-                  <Camera className="w-5 h-5" />
-                  <span className="text-xs">Add</span>
-                </>
               )}
-            </button>
-          )}
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            onChange={handleImageUpload}
-            className="hidden"
-          />
-        </div>
-      </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="hidden"
+              />
+            </div>
+          </div>
 
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor="location">Where did you have it?</Label>
-          <Input
-            id="location"
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-            placeholder="Bar, restaurant, city..."
-            className="bg-secondary/50"
-          />
-        </div>
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="location">Where did you have it?</Label>
+              <Input
+                id="location"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                placeholder="Bar, restaurant, city..."
+                className="bg-secondary/50"
+              />
+            </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="price">Price</Label>
-          <Input
-            id="price"
-            value={price}
-            onChange={(e) => setPrice(e.target.value)}
-            placeholder="$15/glass, $45/bottle..."
-            className="bg-secondary/50"
-          />
-        </div>
-      </div>
+            <div className="space-y-2">
+              <Label htmlFor="price">Price</Label>
+              <Input
+                id="price"
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                placeholder="$15/glass, $45/bottle..."
+                className="bg-secondary/50"
+              />
+            </div>
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
 
       <div className="flex gap-3 pt-2">
         <Button
