@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { GlassWater, Lock, Loader2, Eye, EyeOff, CheckCircle } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { z } from 'zod';
 
 const passwordSchema = z.string().min(6, 'Password must be at least 6 characters');
@@ -22,16 +22,11 @@ const ResetPassword = () => {
   
   const { updatePassword, session, isLoading } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
 
   useEffect(() => {
     // If no session after loading, redirect to auth
     if (!isLoading && !session) {
-      toast({
-        title: 'Invalid or expired link',
-        description: 'Please request a new password reset link.',
-        variant: 'destructive',
-      });
+      toast.error('Invalid or expired link', { description: 'Please request a new password reset link.' });
       navigate('/auth');
     }
   }, [session, isLoading, navigate, toast]);
@@ -62,17 +57,10 @@ const ResetPassword = () => {
     try {
       const { error } = await updatePassword(password);
       if (error) {
-        toast({
-          title: 'Update failed',
-          description: error.message,
-          variant: 'destructive',
-        });
+        toast.error('Update failed', { description: error.message });
       } else {
         setIsSuccess(true);
-        toast({
-          title: 'Password updated',
-          description: 'Your password has been successfully changed.',
-        });
+        toast.success('Password updated', { description: 'Your password has been successfully changed.' });
       }
     } finally {
       setIsSubmitting(false);

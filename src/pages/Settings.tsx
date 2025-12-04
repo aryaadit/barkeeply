@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useThemeContext } from '@/hooks/ThemeProvider';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { DrinkType, drinkTypeLabels } from '@/types/drink';
 import { SortOrder, sortOrderLabels, ThemePreference } from '@/types/profile';
 import { Button } from '@/components/ui/button';
@@ -25,7 +25,6 @@ const Settings = () => {
   const { profile, isLoading: profileLoading, updateProfile, uploadAvatar } = useProfile();
   const { theme, setTheme } = useThemeContext();
   const navigate = useNavigate();
-  const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [displayName, setDisplayName] = useState('');
@@ -69,16 +68,9 @@ const Settings = () => {
     setIsSaving(false);
 
     if (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to save settings.',
-        variant: 'destructive',
-      });
+      toast.error('Error', { description: 'Failed to save settings.' });
     } else {
-      toast({
-        title: 'Settings saved',
-        description: 'Your preferences have been updated.',
-      });
+      toast.success('Settings saved', { description: 'Your preferences have been updated.' });
     }
   };
 
@@ -91,11 +83,7 @@ const Settings = () => {
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      toast({
-        title: 'Invalid file',
-        description: 'Please select an image file.',
-        variant: 'destructive',
-      });
+      toast.error('Invalid file', { description: 'Please select an image file.' });
       return;
     }
 
@@ -104,16 +92,9 @@ const Settings = () => {
     setIsUploading(false);
 
     if (error) {
-      toast({
-        title: 'Upload failed',
-        description: 'Failed to upload avatar.',
-        variant: 'destructive',
-      });
+      toast.error('Upload failed', { description: 'Failed to upload avatar.' });
     } else {
-      toast({
-        title: 'Avatar updated',
-        description: 'Your profile picture has been changed.',
-      });
+      toast.success('Avatar updated', { description: 'Your profile picture has been changed.' });
     }
   };
 

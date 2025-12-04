@@ -261,3 +261,18 @@
 ::-webkit-scrollbar-thumb:hover {
   background: hsl(var(--muted-foreground));
 }
+
+/* Mobile-safe toast positioning */
+.mb-safe {
+  margin-bottom: max(env(safe-area-inset-bottom, 0px), 1rem);
+}
+
+/* Toast mobile styling */
+[data-sonner-toaster] {
+  --width: calc(100% - 2rem) !important;
+  max-width: 400px !important;
+}
+
+[data-sonner-toast] {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+}
