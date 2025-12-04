@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDrinks } from '@/hooks/useDrinks';
 import { useAuth } from '@/hooks/useAuth';
+import { useProfile } from '@/hooks/useProfile';
+import { useThemeContext } from '@/hooks/ThemeProvider';
 import { DrinkType, Drink } from '@/types/drink';
 import { DrinkCard } from '@/components/DrinkCard';
 import { DrinkTypeFilter } from '@/components/DrinkTypeFilter';
@@ -9,17 +11,21 @@ import { SearchBar } from '@/components/SearchBar';
 import { AddDrinkDialog } from '@/components/AddDrinkDialog';
 import { EmptyState } from '@/components/EmptyState';
 import { Button } from '@/components/ui/button';
-import { Plus, GlassWater, LogOut, Loader2 } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Plus, GlassWater, LogOut, Loader2, Settings } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
 const Index = () => {
   const { user, isLoading: authLoading, signOut } = useAuth();
+  const { profile, isLoading: profileLoading } = useProfile();
+  const { setTheme } = useThemeContext();
   const navigate = useNavigate();
   const { drinks, isLoading, addDrink, updateDrink, deleteDrink, filterDrinks } = useDrinks();
   const [selectedType, setSelectedType] = useState<DrinkType | null>(null);
@@ -28,14 +34,35 @@ const Index = () => {
   const [editingDrink, setEditingDrink] = useState<Drink | null>(null);
   const { toast } = useToast();
 
+  // Sync profile theme preference
+  useEffect(() => {
+    if (profile?.themePreference) {
+      setTheme(profile.themePreference);
+    }
+  }, [profile?.themePreference, setTheme]);
+
   useEffect(() => {
     if (!authLoading && !user) {
       navigate('/auth');
     }
   }, [user, authLoading, navigate]);
 
+  // Apply profile defaults when loaded
+  useEffect(() => {
+    if (profile?.defaultDrinkType && selectedType === null) {
+      setSelectedType(profile.defaultDrinkType);
+    }
+  }, [profile?.defaultDrinkType]);
+
   const filteredDrinks = filterDrinks(selectedType ?? undefined, searchQuery);
   const hasFilters = !!selectedType || !!searchQuery;
+
+  const getInitials = () => {
+    if (profile?.displayName) {
+      return profile.displayName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+    }
+    return user?.email?.charAt(0).toUpperCase() || 'U';
+  };
 
   const handleSave = async (drinkData: Omit<Drink, 'id' | 'dateAdded'>) => {
     if (editingDrink) {
@@ -88,7 +115,7 @@ const Index = () => {
     });
   };
 
-  if (authLoading || isLoading) {
+  if (authLoading || isLoading || profileLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -129,15 +156,28 @@ const Index = () => {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="text-muted-foreground">
-                    <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-sm font-medium text-primary">
-                      {user.email?.charAt(0).toUpperCase()}
-                    </div>
+                    <Avatar className="w-8 h-8">
+                      <AvatarImage src={profile?.avatarUrl || undefined} />
+                      <AvatarFallback className="bg-primary/20 text-primary text-sm">
+                        {getInitials()}
+                      </AvatarFallback>
+                    </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
-                  <div className="px-2 py-1.5 text-sm text-muted-foreground truncate">
-                    {user.email}
+                  <div className="px-2 py-1.5">
+                    <p className="text-sm font-medium truncate">
+                      {profile?.displayName || user.email}
+                    </p>
+                    {profile?.displayName && (
+                      <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                    )}
                   </div>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate('/settings')}>
+                    <Settings className="w-4 h-4 mr-2" />
+                    Settings
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
                     <LogOut className="w-4 h-4 mr-2" />
                     Sign out
