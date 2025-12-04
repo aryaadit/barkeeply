@@ -18,10 +18,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { Camera, X, Loader2 } from 'lucide-react';
-
+import { Camera, X, Loader2, ImagePlus } from 'lucide-react';
+import { takePhoto, pickFromGallery, dataUrlToBlob } from '@/hooks/useCamera';
+import { Capacitor } from '@capacitor/core';
 
 interface AddDrinkDialogProps {
   open: boolean;
@@ -74,9 +81,14 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink }: AddDri
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user) return;
+    await uploadFile(file);
+  };
 
+  const uploadFile = async (file: File | Blob) => {
+    if (!user) return;
+    
     setIsUploading(true);
-    const fileExt = file.name.split('.').pop();
+    const fileExt = file instanceof File ? file.name.split('.').pop() : 'jpg';
     const filePath = `${user.id}/${Date.now()}.${fileExt}`;
 
     const { error: uploadError } = await supabase.storage
@@ -97,10 +109,28 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink }: AddDri
     setIsUploading(false);
   };
 
+  const handleTakePhoto = async () => {
+    const photo = await takePhoto();
+    if (photo) {
+      const blob = dataUrlToBlob(photo.dataUrl);
+      await uploadFile(blob);
+    }
+  };
+
+  const handlePickFromGallery = async () => {
+    const photo = await pickFromGallery();
+    if (photo) {
+      const blob = dataUrlToBlob(photo.dataUrl);
+      await uploadFile(blob);
+    }
+  };
+
   const removeImage = () => {
     setImageUrl(undefined);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
+
+  const isNative = Capacitor.isNativePlatform();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -212,6 +242,35 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink }: AddDri
                     <X className="w-3 h-3" />
                   </button>
                 </div>
+              ) : isNative ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      type="button"
+                      disabled={isUploading}
+                      className="w-20 h-20 border-2 border-dashed border-border rounded-lg flex flex-col items-center justify-center gap-1 text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors disabled:opacity-50"
+                    >
+                      {isUploading ? (
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                      ) : (
+                        <>
+                          <Camera className="w-5 h-5" />
+                          <span className="text-xs">Add</span>
+                        </>
+                      )}
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start">
+                    <DropdownMenuItem onClick={handleTakePhoto}>
+                      <Camera className="w-4 h-4 mr-2" />
+                      Take Photo
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handlePickFromGallery}>
+                      <ImagePlus className="w-4 h-4 mr-2" />
+                      Choose from Gallery
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               ) : (
                 <button
                   type="button"
