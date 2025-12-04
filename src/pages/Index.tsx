@@ -13,7 +13,7 @@ import { EmptyState } from '@/components/EmptyState';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Plus, GlassWater, LogOut, Loader2, Settings } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -32,7 +32,6 @@ const Index = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingDrink, setEditingDrink] = useState<Drink | null>(null);
-  const { toast } = useToast();
 
   // Sync profile theme preference
   useEffect(() => {
@@ -76,16 +75,10 @@ const Index = () => {
   const handleSave = async (drinkData: Omit<Drink, 'id' | 'dateAdded'>) => {
     if (editingDrink) {
       await updateDrink(editingDrink.id, drinkData);
-      toast({
-        title: 'Drink updated',
-        description: `${drinkData.name} has been updated.`,
-      });
+      toast.success('Drink updated', { description: `${drinkData.name} has been updated.` });
     } else {
       await addDrink(drinkData);
-      toast({
-        title: 'Drink added',
-        description: `${drinkData.name} has been added to your collection.`,
-      });
+      toast.success('Drink added', { description: `${drinkData.name} has been added to your collection.` });
     }
     setEditingDrink(null);
   };
@@ -98,10 +91,7 @@ const Index = () => {
   const handleDelete = async (id: string) => {
     const drink = drinks.find(d => d.id === id);
     await deleteDrink(id);
-    toast({
-      title: 'Drink removed',
-      description: `${drink?.name} has been removed from your collection.`,
-    });
+    toast.success('Drink removed', { description: `${drink?.name} has been removed from your collection.` });
   };
 
   const handleClearFilters = () => {
@@ -118,10 +108,7 @@ const Index = () => {
 
   const handleSignOut = async () => {
     await signOut();
-    toast({
-      title: 'Signed out',
-      description: 'You have been signed out successfully.',
-    });
+    toast.success('Signed out', { description: 'You have been signed out successfully.' });
   };
 
   if (authLoading || isLoading || profileLoading) {

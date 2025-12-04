@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { GlassWater, Mail, Lock, Loader2, Eye, EyeOff } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { z } from 'zod';
 
 const emailSchema = z.string().email('Please enter a valid email');
@@ -25,7 +25,6 @@ const Auth = () => {
   
   const { signIn, signUp, resetPassword, user, isLoading } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
 
   useEffect(() => {
     if (user) {
@@ -62,17 +61,10 @@ const Auth = () => {
       try {
         const { error } = await resetPassword(email);
         if (error) {
-          toast({
-            title: 'Reset failed',
-            description: error.message,
-            variant: 'destructive',
-          });
+          toast.error('Reset failed', { description: error.message });
         } else {
           setResetSent(true);
-          toast({
-            title: 'Check your email',
-            description: 'We sent you a password reset link.',
-          });
+          toast.success('Check your email', { description: 'We sent you a password reset link.' });
         }
       } finally {
         setIsSubmitting(false);
@@ -89,45 +81,23 @@ const Auth = () => {
         const { error } = await signIn(email, password);
         if (error) {
           if (error.message.includes('Invalid login credentials')) {
-            toast({
-              title: 'Login failed',
-              description: 'Invalid email or password. Please try again.',
-              variant: 'destructive',
-            });
+            toast.error('Login failed', { description: 'Invalid email or password. Please try again.' });
           } else {
-            toast({
-              title: 'Login failed',
-              description: error.message,
-              variant: 'destructive',
-            });
+            toast.error('Login failed', { description: error.message });
           }
         } else {
-          toast({
-            title: 'Welcome back!',
-            description: 'You have successfully logged in.',
-          });
+          toast.success('Welcome back!', { description: 'You have successfully logged in.' });
         }
       } else {
         const { error } = await signUp(email, password);
         if (error) {
           if (error.message.includes('User already registered')) {
-            toast({
-              title: 'Account exists',
-              description: 'An account with this email already exists. Try logging in instead.',
-              variant: 'destructive',
-            });
+            toast.error('Account exists', { description: 'An account with this email already exists. Try logging in instead.' });
           } else {
-            toast({
-              title: 'Sign up failed',
-              description: error.message,
-              variant: 'destructive',
-            });
+            toast.error('Sign up failed', { description: error.message });
           }
         } else {
-          toast({
-            title: 'Account created!',
-            description: 'You have successfully signed up.',
-          });
+          toast.success('Account created!', { description: 'You have successfully signed up.' });
         }
       }
     } finally {
