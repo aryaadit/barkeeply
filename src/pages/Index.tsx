@@ -1,12 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDrinks } from '@/hooks/useDrinks';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useThemeContext } from '@/hooks/ThemeProvider';
 import { DrinkType, Drink } from '@/types/drink';
+import { SortOrder } from '@/types/profile';
 import { DrinkCard } from '@/components/DrinkCard';
 import { DrinkTypeFilter } from '@/components/DrinkTypeFilter';
+import { SortSelector } from '@/components/SortSelector';
 import { SearchBar } from '@/components/SearchBar';
 import { AddDrinkDialog } from '@/components/AddDrinkDialog';
 import { EmptyState } from '@/components/EmptyState';
@@ -23,6 +25,7 @@ const Index = () => {
   const { drinks, isLoading, addDrink, updateDrink, deleteDrink, filterDrinks } = useDrinks();
   const [selectedType, setSelectedType] = useState<DrinkType | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('date_desc');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingDrink, setEditingDrink] = useState<Drink | null>(null);
 
@@ -53,9 +56,34 @@ const Index = () => {
     if (profile?.defaultDrinkType && selectedType === null) {
       setSelectedType(profile.defaultDrinkType);
     }
-  }, [profile?.defaultDrinkType]);
+    if (profile?.defaultSortOrder) {
+      setSortOrder(profile.defaultSortOrder);
+    }
+  }, [profile?.defaultDrinkType, profile?.defaultSortOrder]);
 
-  const filteredDrinks = filterDrinks(selectedType ?? undefined, searchQuery);
+  const filteredDrinks = useMemo(() => {
+    const filtered = filterDrinks(selectedType ?? undefined, searchQuery);
+    
+    return [...filtered].sort((a, b) => {
+      switch (sortOrder) {
+        case 'date_desc':
+          return b.dateAdded.getTime() - a.dateAdded.getTime();
+        case 'date_asc':
+          return a.dateAdded.getTime() - b.dateAdded.getTime();
+        case 'rating_desc':
+          return b.rating - a.rating;
+        case 'rating_asc':
+          return a.rating - b.rating;
+        case 'name_asc':
+          return a.name.localeCompare(b.name);
+        case 'name_desc':
+          return b.name.localeCompare(a.name);
+        default:
+          return 0;
+      }
+    });
+  }, [filterDrinks, selectedType, searchQuery, sortOrder]);
+
   const hasFilters = !!selectedType || !!searchQuery;
 
 
@@ -150,16 +178,19 @@ const Index = () => {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-6">
         {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-6">
+        <div className="flex flex-col gap-4 mb-6">
           <SearchBar
             value={searchQuery}
             onChange={setSearchQuery}
             placeholder="Search by name, brand, or notes..."
           />
-          <DrinkTypeFilter
-            selectedType={selectedType}
-            onSelectType={setSelectedType}
-          />
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <DrinkTypeFilter
+              selectedType={selectedType}
+              onSelectType={setSelectedType}
+            />
+            <SortSelector value={sortOrder} onChange={setSortOrder} />
+          </div>
         </div>
 
         {/* Stats */}
