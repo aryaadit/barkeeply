@@ -1,6 +1,7 @@
 import { useState, useRef, ReactNode } from 'react';
 import { Trash2 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useHaptics } from '@/hooks/useHaptics';
 
 interface SwipeableCardProps {
   children: ReactNode;
@@ -12,11 +13,14 @@ const DELETE_THRESHOLD = 150;
 
 export function SwipeableCard({ children, onDelete }: SwipeableCardProps) {
   const isMobile = useIsMobile();
+  const { impact, notification, ImpactStyle, NotificationType } = useHaptics();
   const [translateX, setTranslateX] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
   const startX = useRef(0);
   const currentX = useRef(0);
   const isDragging = useRef(false);
+  const hasTriggeredThreshold = useRef(false);
+  const hasTriggeredDeleteThreshold = useRef(false);
 
   if (!isMobile) {
     return <>{children}</>;
@@ -25,6 +29,8 @@ export function SwipeableCard({ children, onDelete }: SwipeableCardProps) {
   const handleTouchStart = (e: React.TouchEvent) => {
     startX.current = e.touches[0].clientX;
     isDragging.current = true;
+    hasTriggeredThreshold.current = false;
+    hasTriggeredDeleteThreshold.current = false;
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
@@ -35,6 +41,16 @@ export function SwipeableCard({ children, onDelete }: SwipeableCardProps) {
     
     // Only allow left swipe (positive diff)
     if (diff > 0) {
+      // Haptic feedback when crossing thresholds
+      if (diff >= SWIPE_THRESHOLD && !hasTriggeredThreshold.current) {
+        hasTriggeredThreshold.current = true;
+        impact(ImpactStyle.Light);
+      }
+      if (diff >= DELETE_THRESHOLD && !hasTriggeredDeleteThreshold.current) {
+        hasTriggeredDeleteThreshold.current = true;
+        impact(ImpactStyle.Medium);
+      }
+      
       // Add resistance after threshold
       const resistance = diff > SWIPE_THRESHOLD ? 0.3 : 1;
       const newTranslate = Math.min(diff * resistance, DELETE_THRESHOLD + 50);
@@ -50,6 +66,8 @@ export function SwipeableCard({ children, onDelete }: SwipeableCardProps) {
     const swipeDistance = Math.abs(translateX);
     
     if (swipeDistance >= DELETE_THRESHOLD) {
+      // Haptic feedback for delete action
+      notification(NotificationType.Warning);
       // Animate out and delete
       setIsDeleting(true);
       setTranslateX(-window.innerWidth);

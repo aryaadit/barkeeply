@@ -33,6 +33,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useHaptics } from '@/hooks/useHaptics';
 import { Camera, X, Loader2, ImagePlus } from 'lucide-react';
 import { takePhoto, pickFromGallery, dataUrlToBlob } from '@/hooks/useCamera';
 import { Capacitor } from '@capacitor/core';
@@ -49,6 +50,7 @@ const drinkTypes: DrinkType[] = ['whiskey', 'beer', 'wine', 'cocktail', 'other']
 export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink }: AddDrinkDialogProps) {
   const { user } = useAuth();
   const isMobile = useIsMobile();
+  const { impact, notification, ImpactStyle, NotificationType } = useHaptics();
   const [name, setName] = useState('');
   const [type, setType] = useState<DrinkType>('whiskey');
   const [brand, setBrand] = useState('');
@@ -118,6 +120,7 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink }: AddDri
   };
 
   const handleTakePhoto = async () => {
+    impact(ImpactStyle.Light);
     const photo = await takePhoto();
     if (photo) {
       const blob = dataUrlToBlob(photo.dataUrl);
@@ -126,6 +129,7 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink }: AddDri
   };
 
   const handlePickFromGallery = async () => {
+    impact(ImpactStyle.Light);
     const photo = await pickFromGallery();
     if (photo) {
       const blob = dataUrlToBlob(photo.dataUrl);
@@ -143,6 +147,9 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink }: AddDri
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
+
+    // Haptic feedback for successful form submission
+    notification(NotificationType.Success);
 
     onSave({
       name: name.trim(),

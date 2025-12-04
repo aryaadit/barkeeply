@@ -1,5 +1,6 @@
 import { Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useHaptics } from '@/hooks/useHaptics';
 
 interface StarRatingProps {
   rating: number;
@@ -15,8 +16,13 @@ const sizeClasses = {
 };
 
 export function StarRating({ rating, onChange, size = 'md', readonly = false }: StarRatingProps) {
+  const { selectionChanged } = useHaptics();
+
   const handleClick = (value: number) => {
     if (!readonly && onChange) {
+      if (value !== rating) {
+        selectionChanged();
+      }
       onChange(value);
     }
   };
