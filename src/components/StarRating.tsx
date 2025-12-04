@@ -16,13 +16,13 @@ const sizeClasses = {
 };
 
 export function StarRating({ rating, onChange, size = 'md', readonly = false }: StarRatingProps) {
-  const { selectionChanged } = useHaptics();
+  const { impact, ImpactStyle } = useHaptics();
 
   const handleClick = (value: number) => {
     if (!readonly && onChange) {
-      if (value !== rating) {
-        selectionChanged();
-      }
+      // Stronger haptic for higher ratings
+      const style = value >= 4 ? ImpactStyle.Medium : ImpactStyle.Light;
+      impact(style);
       onChange(value);
     }
   };
