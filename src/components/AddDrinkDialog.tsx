@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Drink, DrinkType, drinkTypeLabels, drinkTypeIcons } from '@/types/drink';
 import { StarRating } from './StarRating';
 import { Button } from '@/components/ui/button';
@@ -62,23 +62,37 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink, defaultT
   const [imageUrl, setImageUrl] = useState<string | undefined>();
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const prevOpenRef = useRef(false);
 
   useEffect(() => {
-    if (editDrink) {
-      setName(editDrink.name);
-      setType(editDrink.type);
-      setBrand(editDrink.brand || '');
-      setRating(editDrink.rating);
-      setNotes(editDrink.notes || '');
-      setLocation(editDrink.location || '');
-      setPrice(editDrink.price || '');
-      setImageUrl(editDrink.imageUrl);
-    } else {
-      resetForm();
-    }
-  }, [editDrink, open]);
+    // Only initialize form when dialog transitions from closed to open
+    const justOpened = open && !prevOpenRef.current;
+    prevOpenRef.current = open;
 
-  const resetForm = () => {
+    if (justOpened) {
+      if (editDrink) {
+        setName(editDrink.name);
+        setType(editDrink.type);
+        setBrand(editDrink.brand || '');
+        setRating(editDrink.rating);
+        setNotes(editDrink.notes || '');
+        setLocation(editDrink.location || '');
+        setPrice(editDrink.price || '');
+        setImageUrl(editDrink.imageUrl);
+      } else {
+        setName('');
+        setType(defaultType);
+        setBrand('');
+        setRating(3);
+        setNotes('');
+        setLocation('');
+        setPrice('');
+        setImageUrl(undefined);
+      }
+    }
+  }, [editDrink, open, defaultType]);
+
+  const resetForm = useCallback(() => {
     setName('');
     setType(defaultType);
     setBrand('');
@@ -87,7 +101,7 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink, defaultT
     setLocation('');
     setPrice('');
     setImageUrl(undefined);
-  };
+  }, [defaultType]);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
