@@ -6,7 +6,8 @@ import { useProfile } from '@/hooks/useProfile';
 import { useThemeContext } from '@/hooks/ThemeProvider';
 import { DrinkType, Drink } from '@/types/drink';
 import { SortOrder } from '@/types/profile';
-import { DrinkCard } from '@/components/DrinkCard';
+import { DrinkListItem } from '@/components/DrinkListItem';
+import { DrinkDetailModal } from '@/components/DrinkDetailModal';
 import { DrinkTypeFilter } from '@/components/DrinkTypeFilter';
 import { SortSelector } from '@/components/SortSelector';
 import { SearchBar } from '@/components/SearchBar';
@@ -28,6 +29,7 @@ const Index = () => {
   const [sortOrder, setSortOrder] = useState<SortOrder>('date_desc');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingDrink, setEditingDrink] = useState<Drink | null>(null);
+  const [viewingDrink, setViewingDrink] = useState<Drink | null>(null);
 
   // Sync profile theme preference
   useEffect(() => {
@@ -208,16 +210,15 @@ const Index = () => {
           </div>
         )}
 
-        {/* Drink Grid */}
+        {/* Drink List */}
         {filteredDrinks.length > 0 ? (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="flex flex-col gap-3 max-w-2xl mx-auto">
             {filteredDrinks.map((drink, index) => (
-              <DrinkCard
+              <DrinkListItem
                 key={drink.id}
                 drink={drink}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-                style={{ animationDelay: `${index * 50}ms` }}
+                onClick={() => setViewingDrink(drink)}
+                style={{ animationDelay: `${index * 30}ms` }}
               />
             ))}
           </div>
@@ -237,6 +238,15 @@ const Index = () => {
         onSave={handleSave}
         editDrink={editingDrink}
         defaultType={selectedType || profile?.defaultDrinkType || 'whiskey'}
+      />
+
+      {/* Detail Modal */}
+      <DrinkDetailModal
+        drink={viewingDrink}
+        open={!!viewingDrink}
+        onOpenChange={(open) => !open && setViewingDrink(null)}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
       />
     </div>
   );
