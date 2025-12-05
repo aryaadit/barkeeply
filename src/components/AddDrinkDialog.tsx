@@ -77,8 +77,14 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink, defaultT
   const [detailsOpen, setDetailsOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const prevOpenRef = useRef(false);
+  const isCameraActiveRef = useRef(false);
 
   useEffect(() => {
+    // Skip form reset if camera is active (app was just backgrounded/resumed)
+    if (isCameraActiveRef.current) {
+      return;
+    }
+    
     // Only initialize form when dialog transitions from closed to open
     const justOpened = open && !prevOpenRef.current;
     prevOpenRef.current = open;
@@ -240,19 +246,34 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink, defaultT
 
   const handleTakePhoto = async () => {
     impact(ImpactStyle.Light);
-    const photo = await takePhoto();
-    if (photo) {
-      const blob = dataUrlToBlob(photo.dataUrl);
-      await uploadFile(blob);
+    isCameraActiveRef.current = true;
+    try {
+      const photo = await takePhoto();
+      if (photo) {
+        const blob = dataUrlToBlob(photo.dataUrl);
+        await uploadFile(blob);
+      }
+    } finally {
+      // Small delay to ensure component has re-stabilized after camera return
+      setTimeout(() => {
+        isCameraActiveRef.current = false;
+      }, 500);
     }
   };
 
   const handlePickFromGallery = async () => {
     impact(ImpactStyle.Light);
-    const photo = await pickFromGallery();
-    if (photo) {
-      const blob = dataUrlToBlob(photo.dataUrl);
-      await uploadFile(blob);
+    isCameraActiveRef.current = true;
+    try {
+      const photo = await pickFromGallery();
+      if (photo) {
+        const blob = dataUrlToBlob(photo.dataUrl);
+        await uploadFile(blob);
+      }
+    } finally {
+      setTimeout(() => {
+        isCameraActiveRef.current = false;
+      }, 500);
     }
   };
 
