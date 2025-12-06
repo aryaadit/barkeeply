@@ -53,8 +53,8 @@ export function ProfileMenu({ avatarUrl, displayName, email, onSignOut }: Profil
   };
 
   const AvatarButton = (
-    <Button variant="ghost" size="icon" className="text-muted-foreground">
-      <Avatar className="w-8 h-8">
+    <Button variant="ghost" size="icon" className="text-muted-foreground min-w-[44px] min-h-[44px]">
+      <Avatar className="w-9 h-9">
         <AvatarImage src={avatarUrl || undefined} />
         <AvatarFallback className="bg-primary/20 text-primary text-sm">
           {getInitials()}

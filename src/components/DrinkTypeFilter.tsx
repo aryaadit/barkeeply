@@ -29,7 +29,7 @@ export function DrinkTypeFilter({ selectedType, onSelectType }: DrinkTypeFilterP
           size="sm"
           onClick={() => handleSelect(type)}
           className={cn(
-            'transition-all duration-200',
+            'transition-all duration-200 min-h-[44px] min-w-[44px]',
             selectedType === type && 'shadow-glow'
           )}
         >
