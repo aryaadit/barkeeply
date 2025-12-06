@@ -36,8 +36,8 @@ export function StarRating({ rating, onChange, size = 'md', readonly = false }: 
           onClick={() => handleClick(value)}
           disabled={readonly}
           className={cn(
-            'transition-all duration-150',
-            !readonly && 'hover:scale-110 cursor-pointer',
+            'transition-all duration-150 flex items-center justify-center',
+            !readonly && 'hover:scale-110 cursor-pointer min-w-[44px] min-h-[44px] -mx-1.5',
             readonly && 'cursor-default'
           )}
         >
