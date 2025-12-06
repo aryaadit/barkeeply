@@ -165,9 +165,10 @@ const Index = () => {
             </div>
 
             <div className="flex items-center gap-2">
-              <Button variant="glow" onClick={() => setDialogOpen(true)}>
+              {/* Desktop add button */}
+              <Button variant="glow" onClick={() => setDialogOpen(true)} className="hidden sm:inline-flex">
                 <Plus className="w-4 h-4" />
-                <span className="hidden sm:inline">Add Drink</span>
+                <span>Add Drink</span>
               </Button>
 
               <ProfileMenu
@@ -234,6 +235,17 @@ const Index = () => {
           />
         )}
       </main>
+
+      {/* Mobile FAB */}
+      <Button
+        variant="glow"
+        size="icon"
+        onClick={() => setDialogOpen(true)}
+        className="sm:hidden fixed bottom-6 right-6 w-14 h-14 rounded-full shadow-lg z-40"
+        style={{ marginBottom: 'env(safe-area-inset-bottom)' }}
+      >
+        <Plus className="w-6 h-6" />
+      </Button>
 
       {/* Add/Edit Dialog */}
       <AddDrinkDialog
