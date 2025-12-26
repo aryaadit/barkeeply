@@ -171,24 +171,35 @@ export function DrinkDetailModal({
     </AlertDialog>
   );
 
-  const imagePreviewDialog = drink.imageUrl && (
+  const handleImagePreviewClose = () => {
+    setShowImagePreview(false);
+  };
+
+  const imagePreviewDialog = drink.imageUrl && showImagePreview && (
     <Dialog 
-      open={showImagePreview} 
-      onOpenChange={setShowImagePreview}
+      open={true} 
+      onOpenChange={(isOpen) => {
+        if (!isOpen) {
+          handleImagePreviewClose();
+        }
+      }}
       modal={true}
     >
       <DialogContent 
         className="max-w-[95vw] max-h-[95vh] p-0 bg-black/95 border-none"
         onPointerDownOutside={(e) => {
           e.preventDefault();
-          setShowImagePreview(false);
+          e.stopPropagation();
+          handleImagePreviewClose();
         }}
         onEscapeKeyDown={(e) => {
           e.preventDefault();
-          setShowImagePreview(false);
+          e.stopPropagation();
+          handleImagePreviewClose();
         }}
         onInteractOutside={(e) => {
           e.preventDefault();
+          e.stopPropagation();
         }}
       >
         <DialogHeader className="sr-only">
@@ -198,7 +209,10 @@ export function DrinkDetailModal({
           variant="ghost"
           size="icon"
           className="absolute right-2 top-2 z-10 text-white hover:bg-white/20"
-          onClick={() => setShowImagePreview(false)}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleImagePreviewClose();
+          }}
         >
           <X className="h-5 w-5" />
         </Button>
