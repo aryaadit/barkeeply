@@ -396,7 +396,12 @@ export default function AddDrink() {
             <Label htmlFor="type">Type</Label>
             <Select value={type} onValueChange={(v) => setType(v as DrinkType)}>
               <SelectTrigger className="bg-secondary/50 h-12">
-                <SelectValue />
+                <SelectValue>
+                  <span className="flex items-center gap-2">
+                    <span>{drinkTypeIcons[type]}</span>
+                    <span>{drinkTypeLabels[type]}</span>
+                  </span>
+                </SelectValue>
               </SelectTrigger>
               <SelectContent className="bg-popover">
                 {drinkTypes.map((t) => (
