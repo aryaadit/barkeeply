@@ -277,7 +277,11 @@ const Index = () => {
       <DrinkDetailModal
         drink={viewingDrink}
         open={!!viewingDrink}
-        onOpenChange={(open) => !open && setViewingDrink(null)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setViewingDrink(null);
+          }
+        }}
         onEdit={handleEdit}
         onDelete={handleDelete}
       />
