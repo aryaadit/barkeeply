@@ -1,17 +1,138 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+// Allowed origins for CORS
+const ALLOWED_ORIGINS = [
+  "https://barkeeply.lovable.app",
+  "https://preview--barkeeply.lovable.app",
+  "http://localhost:5173",
+  "http://localhost:8080",
+];
+
+// Valid drink types
+const VALID_DRINK_TYPES = ["whiskey", "beer", "wine", "cocktail", "other"];
+
+// Input validation limits
+const MAX_DRINK_NAME_LENGTH = 200;
+const MAX_BRAND_LENGTH = 100;
+const MAX_URL_LENGTH = 500;
+
+// Supabase storage URL prefix for validation
+const SUPABASE_STORAGE_PREFIX = "https://kvsfwvxlmrtbzafznczd.supabase.co/storage/";
+
+function getCorsHeaders(req: Request): Record<string, string> {
+  const origin = req.headers.get("origin") || "";
+  
+  // Check if origin is in allowed list
+  if (ALLOWED_ORIGINS.includes(origin)) {
+    return {
+      "Access-Control-Allow-Origin": origin,
+      "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    };
+  }
+  
+  // For non-allowed origins, return restrictive headers
+  return {
+    "Access-Control-Allow-Origin": ALLOWED_ORIGINS[0],
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  };
+}
+
+function sanitizeInput(str: string): string {
+  return str.trim().replace(/[<>]/g, "");
+}
+
+function validateRequest(body: unknown): { 
+  valid: boolean; 
+  error?: string; 
+  data?: { drinkName?: string; drinkType?: string; brand?: string; imageUrl?: string } 
+} {
+  if (typeof body !== "object" || body === null) {
+    return { valid: false, error: "Invalid request body" };
+  }
+
+  const { drinkName, drinkType, brand, imageUrl } = body as Record<string, unknown>;
+
+  // Validate drinkName
+  if (drinkName !== undefined) {
+    if (typeof drinkName !== "string") {
+      return { valid: false, error: "drinkName must be a string" };
+    }
+    if (drinkName.length > MAX_DRINK_NAME_LENGTH) {
+      return { valid: false, error: `drinkName must be less than ${MAX_DRINK_NAME_LENGTH} characters` };
+    }
+  }
+
+  // Validate drinkType
+  if (drinkType !== undefined) {
+    if (typeof drinkType !== "string") {
+      return { valid: false, error: "drinkType must be a string" };
+    }
+    if (!VALID_DRINK_TYPES.includes(drinkType)) {
+      return { valid: false, error: `drinkType must be one of: ${VALID_DRINK_TYPES.join(", ")}` };
+    }
+  }
+
+  // Validate brand
+  if (brand !== undefined) {
+    if (typeof brand !== "string") {
+      return { valid: false, error: "brand must be a string" };
+    }
+    if (brand.length > MAX_BRAND_LENGTH) {
+      return { valid: false, error: `brand must be less than ${MAX_BRAND_LENGTH} characters` };
+    }
+  }
+
+  // Validate imageUrl
+  if (imageUrl !== undefined) {
+    if (typeof imageUrl !== "string") {
+      return { valid: false, error: "imageUrl must be a string" };
+    }
+    if (imageUrl.length > MAX_URL_LENGTH) {
+      return { valid: false, error: `imageUrl must be less than ${MAX_URL_LENGTH} characters` };
+    }
+    // Only allow Supabase storage URLs to prevent SSRF
+    if (!imageUrl.startsWith(SUPABASE_STORAGE_PREFIX)) {
+      return { valid: false, error: "imageUrl must be from Supabase storage" };
+    }
+    try {
+      new URL(imageUrl);
+    } catch {
+      return { valid: false, error: "imageUrl must be a valid URL" };
+    }
+  }
+
+  return {
+    valid: true,
+    data: {
+      drinkName: drinkName ? sanitizeInput(drinkName as string) : undefined,
+      drinkType: drinkType as string | undefined,
+      brand: brand ? sanitizeInput(brand as string) : undefined,
+      imageUrl: imageUrl as string | undefined,
+    },
+  };
+}
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
+
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { drinkName, drinkType, brand, imageUrl } = await req.json();
+    const body = await req.json();
+    
+    // Validate and sanitize input
+    const validation = validateRequest(body);
+    if (!validation.valid) {
+      console.error("Validation error:", validation.error);
+      return new Response(
+        JSON.stringify({ error: validation.error }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const { drinkName, drinkType, brand, imageUrl } = validation.data!;
     
     // Allow lookup by name OR image
     if (!drinkName && !imageUrl) {
@@ -125,6 +246,7 @@ If you don't have reliable information for a field, set it to null.`;
     );
   } catch (error) {
     console.error("Lookup error:", error);
+    const corsHeaders = getCorsHeaders(req);
     return new Response(
       JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
