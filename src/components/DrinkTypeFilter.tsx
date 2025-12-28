@@ -31,8 +31,8 @@ export function DrinkTypeFilter({ selectedType, onSelectType }: DrinkTypeFilterP
     onSelectType(type);
   };
 
-  const handleAddCustomType = async (name: string, icon: string) => {
-    const result = await addCustomType(name, icon);
+  const handleAddCustomType = async (name: string, icon: string, color: string) => {
+    const result = await addCustomType(name, icon, color);
     if (result?.error) {
       return { error: result.error };
     }
@@ -114,6 +114,13 @@ export function DrinkTypeFilter({ selectedType, onSelectType }: DrinkTypeFilterP
                   'transition-all duration-200 min-h-[44px] min-w-[44px]',
                   selectedType === customType.name && 'shadow-glow'
                 )}
+                style={selectedType !== customType.name ? {
+                  borderColor: `${customType.color}40`,
+                  color: customType.color,
+                } : {
+                  backgroundColor: customType.color,
+                  borderColor: customType.color,
+                }}
               >
                 <span>{customType.icon}</span>
                 <span>{customType.name}</span>

@@ -6,6 +6,7 @@ export interface CustomDrinkType {
   id: string;
   name: string;
   icon: string;
+  color: string;
 }
 
 export function useCustomDrinkTypes() {
@@ -33,6 +34,7 @@ export function useCustomDrinkTypes() {
           id: d.id,
           name: d.name,
           icon: d.icon,
+          color: d.color,
         }))
       );
     }
@@ -43,7 +45,7 @@ export function useCustomDrinkTypes() {
     fetchCustomTypes();
   }, [fetchCustomTypes]);
 
-  const addCustomType = async (name: string, icon: string = '🍹') => {
+  const addCustomType = async (name: string, icon: string = '🍹', color: string = '#8B5CF6') => {
     if (!user) return null;
 
     // Check if already exists
@@ -60,6 +62,7 @@ export function useCustomDrinkTypes() {
         user_id: user.id,
         name: name.trim(),
         icon,
+        color,
       })
       .select()
       .single();
@@ -73,6 +76,7 @@ export function useCustomDrinkTypes() {
       id: data.id,
       name: data.name,
       icon: data.icon,
+      color: data.color,
     };
 
     setCustomTypes((prev) => [...prev, newType]);

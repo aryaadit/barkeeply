@@ -6,6 +6,7 @@ interface DrinkTypeBadgeProps {
   size?: 'sm' | 'md';
   showIcon?: boolean;
   customIcon?: string;
+  customColor?: string;
 }
 
 const typeClasses: Record<BuiltInDrinkType, string> = {
@@ -21,11 +22,32 @@ const sizeClasses = {
   md: 'px-3 py-1 text-sm',
 };
 
-export function DrinkTypeBadge({ type, size = 'sm', showIcon = true, customIcon }: DrinkTypeBadgeProps) {
+export function DrinkTypeBadge({ type, size = 'sm', showIcon = true, customIcon, customColor }: DrinkTypeBadgeProps) {
   const isBuiltIn = isBuiltInDrinkType(type);
-  const colorClass = isBuiltIn ? typeClasses[type] : 'bg-primary/20 text-primary border-primary/30';
   const icon = isBuiltIn ? drinkTypeIcons[type] : (customIcon || '🍹');
   const label = isBuiltIn ? drinkTypeLabels[type] : type;
+
+  // Use custom color styling for custom types
+  if (!isBuiltIn && customColor) {
+    return (
+      <span
+        className={cn(
+          'inline-flex items-center gap-1.5 rounded-full border font-medium',
+          sizeClasses[size]
+        )}
+        style={{
+          backgroundColor: `${customColor}20`,
+          color: customColor,
+          borderColor: `${customColor}40`,
+        }}
+      >
+        {showIcon && <span>{icon}</span>}
+        <span>{label}</span>
+      </span>
+    );
+  }
+
+  const colorClass = isBuiltIn ? typeClasses[type] : 'bg-primary/20 text-primary border-primary/30';
 
   return (
     <span

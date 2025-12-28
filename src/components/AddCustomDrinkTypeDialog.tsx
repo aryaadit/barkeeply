@@ -21,10 +21,29 @@ const EMOJI_OPTIONS = [
   '🍻', '🥤', '🧊', '🍵', '🫖', '🍯', '🧃', '🌵', '🍋', '🫧',
 ];
 
+const COLOR_OPTIONS = [
+  { name: 'Amber', value: '#D97706' },
+  { name: 'Orange', value: '#EA580C' },
+  { name: 'Red', value: '#DC2626' },
+  { name: 'Rose', value: '#E11D48' },
+  { name: 'Pink', value: '#DB2777' },
+  { name: 'Purple', value: '#8B5CF6' },
+  { name: 'Violet', value: '#7C3AED' },
+  { name: 'Indigo', value: '#4F46E5' },
+  { name: 'Blue', value: '#2563EB' },
+  { name: 'Cyan', value: '#0891B2' },
+  { name: 'Teal', value: '#0D9488' },
+  { name: 'Green', value: '#16A34A' },
+  { name: 'Lime', value: '#65A30D' },
+  { name: 'Yellow', value: '#CA8A04' },
+  { name: 'Stone', value: '#78716C' },
+  { name: 'Slate', value: '#475569' },
+];
+
 interface AddCustomDrinkTypeDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAdd: (name: string, icon: string) => Promise<{ error?: string } | null>;
+  onAdd: (name: string, icon: string, color: string) => Promise<{ error?: string } | null>;
 }
 
 export function AddCustomDrinkTypeDialog({
@@ -34,6 +53,7 @@ export function AddCustomDrinkTypeDialog({
 }: AddCustomDrinkTypeDialogProps) {
   const [name, setName] = useState('');
   const [icon, setIcon] = useState('🍹');
+  const [color, setColor] = useState('#8B5CF6');
   const [isAdding, setIsAdding] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -44,7 +64,7 @@ export function AddCustomDrinkTypeDialog({
     setIsAdding(true);
     setError(null);
 
-    const result = await onAdd(name.trim(), icon);
+    const result = await onAdd(name.trim(), icon, color);
 
     setIsAdding(false);
 
@@ -55,6 +75,7 @@ export function AddCustomDrinkTypeDialog({
 
     setName('');
     setIcon('🍹');
+    setColor('#8B5CF6');
     onOpenChange(false);
   };
 
@@ -66,6 +87,7 @@ export function AddCustomDrinkTypeDialog({
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="flex gap-3 items-end">
+            {/* Icon picker */}
             <div className="space-y-2">
               <Label>Icon</Label>
               <Popover>
@@ -95,6 +117,50 @@ export function AddCustomDrinkTypeDialog({
                 </PopoverContent>
               </Popover>
             </div>
+
+            {/* Color picker */}
+            <div className="space-y-2">
+              <Label>Color</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-14 h-14 p-1"
+                  >
+                    <div 
+                      className="w-full h-full rounded-md" 
+                      style={{ backgroundColor: color }}
+                    />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-64 p-2" align="start">
+                  <div className="grid grid-cols-4 gap-1">
+                    {COLOR_OPTIONS.map((c) => (
+                      <Button
+                        key={c.value}
+                        type="button"
+                        variant="ghost"
+                        className="w-12 h-12 p-1 relative"
+                        onClick={() => setColor(c.value)}
+                        title={c.name}
+                      >
+                        <div 
+                          className="w-full h-full rounded-md border-2"
+                          style={{ 
+                            backgroundColor: c.value,
+                            borderColor: color === c.value ? 'white' : 'transparent',
+                            boxShadow: color === c.value ? '0 0 0 2px hsl(var(--primary))' : 'none'
+                          }}
+                        />
+                      </Button>
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            {/* Name input */}
             <div className="flex-1 space-y-2">
               <Label htmlFor="typeName">Name</Label>
               <Input
@@ -107,6 +173,23 @@ export function AddCustomDrinkTypeDialog({
               />
             </div>
           </div>
+
+          {/* Preview */}
+          <div className="flex items-center gap-2 p-3 rounded-lg border bg-secondary/30">
+            <span className="text-sm text-muted-foreground">Preview:</span>
+            <span
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium border"
+              style={{ 
+                backgroundColor: `${color}20`,
+                color: color,
+                borderColor: `${color}40`
+              }}
+            >
+              <span>{icon}</span>
+              <span>{name || 'Drink Type'}</span>
+            </span>
+          </div>
+
           {error && (
             <p className="text-sm text-destructive">{error}</p>
           )}
