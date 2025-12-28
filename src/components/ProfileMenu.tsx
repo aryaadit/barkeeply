@@ -121,6 +121,9 @@ export function ProfileMenu({ avatarUrl, displayName, email, onSignOut }: Profil
               </Button>
             )}
             <BugReportDialog
+              onOpenChange={(open) => {
+                if (open) setDrawerOpen(false);
+              }}
               trigger={
                 <Button 
                   variant="outline" 
