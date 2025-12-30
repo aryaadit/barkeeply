@@ -18,7 +18,7 @@ import { SearchBar } from '@/components/SearchBar';
 import { AddDrinkDialog } from '@/components/AddDrinkDialog';
 import { EmptyState } from '@/components/EmptyState';
 import { ProfileMenu } from '@/components/ProfileMenu';
-import BottomNavigation from '@/components/BottomNavigation';
+
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
@@ -63,11 +63,6 @@ const Index = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingDrink, setEditingDrink] = useState<Drink | null>(null);
   const [viewingDrink, setViewingDrink] = useState<Drink | null>(null);
-  const searchInputRef = useRef<HTMLInputElement>(null);
-
-  const handleSearchFocus = useCallback(() => {
-    searchInputRef.current?.focus();
-  }, []);
 
   // Sync profile theme preference
   useEffect(() => {
@@ -311,13 +306,12 @@ const Index = () => {
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-6 pb-24 md:pb-6">
+      <main className="container mx-auto px-4 py-6">
         {/* Unified Action Bar */}
         <div className="flex flex-col gap-3 mb-4">
           {/* Search + Filter Trigger Row */}
           <div className="flex items-center gap-3">
             <SearchBar
-              ref={searchInputRef}
               value={searchQuery}
               onChange={setSearchQuery}
               placeholder="Search by name, brand, or notes..."
@@ -378,8 +372,18 @@ const Index = () => {
         )}
       </main>
 
-      {/* Bottom Navigation - Mobile only */}
-      {isMobile && <BottomNavigation onSearchFocus={handleSearchFocus} />}
+      {/* Mobile FAB */}
+      {isMobile && (
+        <Button
+          variant="glow"
+          size="icon"
+          className="fixed bottom-6 right-6 w-14 h-14 rounded-full shadow-lg z-50"
+          onClick={handleAddClick}
+          style={{ marginBottom: 'env(safe-area-inset-bottom)' }}
+        >
+          <Plus className="w-6 h-6" />
+        </Button>
+      )}
 
       {/* Add/Edit Dialog - Desktop only */}
       {!isMobile && (
