@@ -14,6 +14,20 @@ export interface Drink {
   price?: string;
   dateAdded: Date;
   imageUrl?: string;
+  isWishlist?: boolean;
+}
+
+export interface Collection {
+  id: string;
+  name: string;
+  description?: string;
+  icon: string;
+  coverColor: string;
+  shareId: string;
+  isPublic: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  drinkCount?: number;
 }
 
 export const builtInDrinkTypes: BuiltInDrinkType[] = ['whiskey', 'beer', 'wine', 'cocktail', 'other'];

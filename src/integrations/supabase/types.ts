@@ -83,6 +83,84 @@ export type Database = {
         }
         Relationships: []
       }
+      collection_drinks: {
+        Row: {
+          added_at: string
+          collection_id: string
+          drink_id: string
+          id: string
+          position: number | null
+        }
+        Insert: {
+          added_at?: string
+          collection_id: string
+          drink_id: string
+          id?: string
+          position?: number | null
+        }
+        Update: {
+          added_at?: string
+          collection_id?: string
+          drink_id?: string
+          id?: string
+          position?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "collection_drinks_collection_id_fkey"
+            columns: ["collection_id"]
+            isOneToOne: false
+            referencedRelation: "collections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "collection_drinks_drink_id_fkey"
+            columns: ["drink_id"]
+            isOneToOne: false
+            referencedRelation: "drinks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      collections: {
+        Row: {
+          cover_color: string | null
+          created_at: string
+          description: string | null
+          icon: string | null
+          id: string
+          is_public: boolean | null
+          name: string
+          share_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cover_color?: string | null
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_public?: boolean | null
+          name: string
+          share_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cover_color?: string | null
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_public?: boolean | null
+          name?: string
+          share_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       custom_drink_types: {
         Row: {
           color: string
@@ -118,6 +196,7 @@ export type Database = {
           id: string
           image_url: string | null
           is_favorite: boolean | null
+          is_wishlist: boolean | null
           location: string | null
           name: string
           notes: string | null
@@ -134,6 +213,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_favorite?: boolean | null
+          is_wishlist?: boolean | null
           location?: string | null
           name: string
           notes?: string | null
@@ -150,6 +230,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_favorite?: boolean | null
+          is_wishlist?: boolean | null
           location?: string | null
           name?: string
           notes?: string | null
