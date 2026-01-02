@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Drink, drinkTypeIcons } from '@/types/drink';
 import { StarRating } from './StarRating';
 import { DrinkTypeBadge } from './DrinkTypeBadge';
@@ -52,6 +53,7 @@ export function DrinkDetailModal({
   onWishlistToggle,
 }: DrinkDetailModalProps) {
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
   const { collections, getDrinkCollections } = useCollections();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showImagePreview, setShowImagePreview] = useState(false);
@@ -163,7 +165,11 @@ export function DrinkDetailModal({
               <Badge
                 key={collection.id}
                 variant="secondary"
-                className="text-xs"
+                className="text-xs cursor-pointer hover:bg-secondary/80 active:scale-95 transition-all"
+                onClick={() => {
+                  onOpenChange(false);
+                  navigate(`/collections/${collection.id}`);
+                }}
               >
                 <span className="mr-1">{collection.icon}</span>
                 {collection.name}
