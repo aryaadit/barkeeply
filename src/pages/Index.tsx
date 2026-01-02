@@ -18,6 +18,7 @@ import { SearchBar } from '@/components/SearchBar';
 import { AddDrinkDialog } from '@/components/AddDrinkDialog';
 import { EmptyState } from '@/components/EmptyState';
 import { ProfileMenu } from '@/components/ProfileMenu';
+import BottomNavigation from '@/components/BottomNavigation';
 
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
@@ -397,18 +398,11 @@ const Index = () => {
         )}
       </main>
 
-      {/* Mobile FAB */}
-      {isMobile && (
-        <Button
-          variant="glow"
-          size="icon"
-          className="fixed bottom-6 right-6 w-14 h-14 rounded-full shadow-lg z-50"
-          onClick={handleAddClick}
-          style={{ marginBottom: 'env(safe-area-inset-bottom)' }}
-        >
-          <Plus className="w-6 h-6" />
-        </Button>
-      )}
+      {/* Mobile Bottom Navigation */}
+      {isMobile && <BottomNavigation />}
+
+      {/* Add padding for bottom nav on mobile */}
+      {isMobile && <div className="h-20" />}
 
       {/* Add/Edit Dialog - Desktop only */}
       {!isMobile && (
