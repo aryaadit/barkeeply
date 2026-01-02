@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useHaptics } from '@/hooks/useHaptics';
 import { useCustomDrinkTypes } from '@/hooks/useCustomDrinkTypes';
-import { Bookmark } from 'lucide-react';
+import { Clock } from 'lucide-react';
 
 interface QuickFiltersProps {
   selectedType: DrinkType | null;
@@ -99,7 +99,7 @@ export function QuickFilters({
             !showWishlist && 'bg-muted/50 border-border/50 hover:bg-muted hover:border-border'
           )}
         >
-          <Bookmark className="w-3 h-3 mr-1" />
+          <Clock className="w-3 h-3 mr-1" />
           <span className="opacity-70">{wishlistCount}</span>
         </Button>
       )}

@@ -1,6 +1,5 @@
 import { Drink, drinkTypeIcons, drinkTypeLabels } from '@/types/drink';
 import { StarRating } from './StarRating';
-import { WishlistToggle } from './WishlistToggle';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Clock } from 'lucide-react';
@@ -26,10 +25,11 @@ export function DrinkListItem({ drink, onClick, onWishlistToggle, style }: Drink
       )}
       style={style}
     >
-      {/* Wishlist indicator */}
+      {/* Wishlist indicator - "Want to try" label in top right */}
       {drink.isWishlist && (
-        <div className="absolute top-2 right-2 text-orange-500 pointer-events-none">
-          <Clock className="w-4 h-4 fill-current" />
+        <div className="absolute top-2 right-2 flex items-center gap-1 text-orange-500 pointer-events-none">
+          <Clock className="w-3.5 h-3.5" />
+          <span className="text-xs font-medium">Want to try</span>
         </div>
       )}
       
@@ -67,9 +67,7 @@ export function DrinkListItem({ drink, onClick, onWishlistToggle, style }: Drink
 
         {/* Meta: Rating, Type Badge, Price */}
         <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-          {drink.isWishlist ? (
-            <span className="text-xs text-muted-foreground italic">Want to try</span>
-          ) : (
+          {!drink.isWishlist && (
             <StarRating rating={drink.rating} readonly size="sm" animated />
           )}
           <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-muted text-muted-foreground transition-colors duration-300">
@@ -90,17 +88,11 @@ export function DrinkListItem({ drink, onClick, onWishlistToggle, style }: Drink
         )}
       </div>
 
-      {/* Right Section - Date & Wishlist Toggle */}
+      {/* Right Section - Date only (wishlist toggle removed, indicator is in top right) */}
       <div className="flex-shrink-0 flex items-center gap-2 z-10">
         <span className="text-xs text-muted-foreground whitespace-nowrap hidden sm:block">
           {format(drink.dateAdded, 'MMM d, yyyy')}
         </span>
-        {onWishlistToggle && (
-          <WishlistToggle
-            isWishlist={drink.isWishlist || false}
-            onToggle={(isWishlist) => onWishlistToggle(drink.id, isWishlist)}
-          />
-        )}
       </div>
     </div>
   );
