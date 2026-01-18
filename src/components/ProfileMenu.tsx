@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { LogOut, Settings, MessageSquare, Shield, Activity, User } from 'lucide-react';
+import { LogOut, Settings, MessageSquare, Shield, User } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useHaptics } from '@/hooks/useHaptics';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
@@ -60,11 +60,6 @@ export function ProfileMenu({ avatarUrl, displayName, email, username, onSignOut
     navigate('/settings');
   };
 
-  const handleFeed = () => {
-    impact(ImpactStyle.Light);
-    setDrawerOpen(false);
-    navigate('/feed');
-  };
 
   const handleMyProfile = () => {
     impact(ImpactStyle.Light);
@@ -138,14 +133,6 @@ export function ProfileMenu({ avatarUrl, displayName, email, username, onSignOut
             <Button 
               variant="outline" 
               className="w-full justify-start gap-3 h-14 text-base"
-              onClick={handleFeed}
-            >
-              <Activity className="w-5 h-5" />
-              Activity Feed
-            </Button>
-            <Button 
-              variant="outline" 
-              className="w-full justify-start gap-3 h-14 text-base"
               onClick={handleSettings}
             >
               <Settings className="w-5 h-5" />
@@ -212,10 +199,6 @@ export function ProfileMenu({ avatarUrl, displayName, email, username, onSignOut
             My Profile
           </DropdownMenuItem>
         )}
-        <DropdownMenuItem onClick={() => navigate('/feed')}>
-          <Activity className="w-4 h-4 mr-2" />
-          Activity Feed
-        </DropdownMenuItem>
         <DropdownMenuItem onClick={() => navigate('/settings')}>
           <Settings className="w-4 h-4 mr-2" />
           Settings
