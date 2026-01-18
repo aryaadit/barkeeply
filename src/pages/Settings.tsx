@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
+import { useSocialProfile } from '@/hooks/useSocialProfile';
 import { useThemeContext } from '@/hooks/ThemeProvider';
 import { useCustomDrinkTypes } from '@/hooks/useCustomDrinkTypes';
 import { useAnalytics } from '@/hooks/useAnalytics';
@@ -21,14 +22,15 @@ import {
 } from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Camera, Loader2, Sun, Moon, Monitor, Globe, Users, Lock } from 'lucide-react';
+import { ArrowLeft, Camera, Loader2, Sun, Moon, Monitor, Globe, Users, Lock, Check, X } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { ActivityVisibility } from '@/types/social';
 import BottomNavigation from '@/components/BottomNavigation';
 
 const Settings = () => {
   const { user, isLoading: authLoading } = useAuth();
-  const { profile, isLoading: profileLoading, updateProfile, uploadAvatar } = useProfile();
+  const { profile, isLoading: profileLoading, updateProfile, uploadAvatar, refetch } = useProfile();
+  const { checkUsernameAvailable } = useSocialProfile();
   const { theme, setTheme } = useThemeContext();
   const { customTypes } = useCustomDrinkTypes();
   const { trackEvent } = useAnalytics();
@@ -37,6 +39,9 @@ const Settings = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [displayName, setDisplayName] = useState('');
+  const [username, setUsername] = useState('');
+  const [usernameError, setUsernameError] = useState<string | null>(null);
+  const [isCheckingUsername, setIsCheckingUsername] = useState(false);
   const [defaultDrinkType, setDefaultDrinkType] = useState<DrinkType | 'all'>('all');
   const [defaultSortOrder, setDefaultSortOrder] = useState<SortOrder>('date_desc');
   const [themePreference, setThemePreference] = useState<ThemePreference>(theme);
@@ -54,6 +59,7 @@ const Settings = () => {
   useEffect(() => {
     if (profile) {
       setDisplayName(profile.displayName || '');
+      setUsername(profile.username || '');
       setDefaultDrinkType(profile.defaultDrinkType || 'all');
       setDefaultSortOrder(profile.defaultSortOrder);
       setThemePreference(profile.themePreference);
@@ -61,6 +67,47 @@ const Settings = () => {
       setActivityVisibility(profile.activityVisibility || 'private');
     }
   }, [profile]);
+
+  // Username validation
+  useEffect(() => {
+    const validateUsername = async () => {
+      const trimmedUsername = username.trim().toLowerCase();
+      
+      // Reset error if empty or same as current
+      if (!trimmedUsername || trimmedUsername === profile?.username?.toLowerCase()) {
+        setUsernameError(null);
+        return;
+      }
+
+      // Format validation
+      if (trimmedUsername.length < 3) {
+        setUsernameError('Username must be at least 3 characters');
+        return;
+      }
+      if (trimmedUsername.length > 20) {
+        setUsernameError('Username must be 20 characters or less');
+        return;
+      }
+      if (!/^[a-z0-9_]+$/.test(trimmedUsername)) {
+        setUsernameError('Only lowercase letters, numbers, and underscores');
+        return;
+      }
+
+      // Check availability
+      setIsCheckingUsername(true);
+      const isAvailable = await checkUsernameAvailable(trimmedUsername);
+      setIsCheckingUsername(false);
+
+      if (!isAvailable) {
+        setUsernameError('Username is already taken');
+      } else {
+        setUsernameError(null);
+      }
+    };
+
+    const debounce = setTimeout(validateUsername, 300);
+    return () => clearTimeout(debounce);
+  }, [username, profile?.username, checkUsernameAvailable]);
 
   // Apply drink type theme
   useEffect(() => {
@@ -71,9 +118,18 @@ const Settings = () => {
   }, [defaultDrinkType]);
 
   const handleSave = async () => {
+    // Validate username before saving
+    if (usernameError) {
+      toast.error('Invalid username', { description: usernameError });
+      return;
+    }
+
     setIsSaving(true);
+    const trimmedUsername = username.trim().toLowerCase() || null;
+    
     const { error } = await updateProfile({
       displayName: displayName || null,
+      username: trimmedUsername,
       defaultDrinkType: defaultDrinkType === 'all' ? null : defaultDrinkType,
       defaultSortOrder,
       themePreference,
@@ -89,7 +145,9 @@ const Settings = () => {
         theme_changed: themePreference !== profile?.themePreference,
         default_filter_changed: defaultDrinkType !== (profile?.defaultDrinkType || 'all'),
         privacy_changed: isPublic !== profile?.isPublic || activityVisibility !== profile?.activityVisibility,
+        username_changed: trimmedUsername !== profile?.username,
       });
+      await refetch();
       toast.success('Settings saved', { description: 'Your preferences have been updated.' });
     }
   };
@@ -199,20 +257,38 @@ const Settings = () => {
                 <p className="text-sm text-muted-foreground mt-1">{user.email}</p>
               </div>
 
-              {profile?.username && (
-                <div>
-                  <Label>Username</Label>
-                  <p className="text-sm text-muted-foreground mt-1">@{profile.username}</p>
+              <div>
+                <Label htmlFor="username">Username</Label>
+                <div className="relative mt-1">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">@</span>
+                  <Input
+                    id="username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
+                    placeholder="your_username"
+                    className={`pl-7 pr-10 ${usernameError ? 'border-destructive' : username && !isCheckingUsername && !usernameError ? 'border-green-500' : ''}`}
+                    maxLength={20}
+                  />
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    {isCheckingUsername && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />}
+                    {!isCheckingUsername && username && !usernameError && <Check className="w-4 h-4 text-green-500" />}
+                    {!isCheckingUsername && usernameError && <X className="w-4 h-4 text-destructive" />}
+                  </div>
+                </div>
+                {usernameError && (
+                  <p className="text-sm text-destructive mt-1">{usernameError}</p>
+                )}
+                {!usernameError && username && (
                   <Button 
                     variant="link" 
                     size="sm" 
                     className="px-0 h-auto text-primary"
-                    onClick={() => navigate(`/u/${profile.username}`)}
+                    onClick={() => navigate(`/u/${username}`)}
                   >
                     View public profile →
                   </Button>
-                </div>
-              )}
+                )}
+              </div>
             </div>
 
             {/* Privacy & Visibility subsection */}
