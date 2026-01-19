@@ -1,13 +1,18 @@
 import { Apple, X } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const TESTFLIGHT_URL = 'https://testflight.apple.com/join/ySRegsMR';
 
 export function TestFlightBanner() {
+  const isMobile = useIsMobile();
   const [dismissed, setDismissed] = useState(() => {
     return localStorage.getItem('testflight-banner-dismissed') === 'true';
   });
+
+  // Don't show on mobile - users already have the app or can get it from App Store
+  if (isMobile) return null;
 
   const handleDismiss = () => {
     localStorage.setItem('testflight-banner-dismissed', 'true');
