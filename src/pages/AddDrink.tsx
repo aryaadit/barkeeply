@@ -255,11 +255,22 @@ export default function AddDrink() {
       if (editId) {
         await updateDrink(editId, drinkData);
         toast.success('Drink updated');
+        navigate(-1);
       } else {
-        await addDrink(drinkData);
+        const result = await addDrink(drinkData);
+        
+        if (result && 'isDuplicate' in result && result.isDuplicate) {
+          toast.error('This drink already exists in your collection', {
+            description: 'You can edit the existing drink or use a different name.',
+            duration: 5000,
+          });
+          setIsSaving(false);
+          return;
+        }
+        
         toast.success('Drink added');
+        navigate(-1);
       }
-      navigate(-1);
     } catch (error) {
       console.error('Error saving drink:', error);
       toast.error('Failed to save drink');
