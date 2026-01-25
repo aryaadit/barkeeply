@@ -15,7 +15,7 @@ import { PageHeader } from '@/components/PageHeader';
 import { FollowButton } from '@/components/FollowButton';
 import { ActivityCard } from '@/components/ActivityCard';
 import { FollowListModal } from '@/components/FollowListModal';
-import { DrinkDetailModal } from '@/components/DrinkDetailModal';
+import { DrinkDetailModal, DrinkOwner } from '@/components/DrinkDetailModal';
 import { PublicProfile, ActivityFeedItem } from '@/types/social';
 import { Drink } from '@/types/drink';
 import { supabase } from '@/integrations/supabase/client';
@@ -33,6 +33,7 @@ export default function UserProfile() {
   const [followListType, setFollowListType] = useState<'Followers' | 'Following' | null>(null);
   const [followListLoading, setFollowListLoading] = useState(false);
   const [viewingDrink, setViewingDrink] = useState<Drink | null>(null);
+  const [viewingOwner, setViewingOwner] = useState<DrinkOwner | null>(null);
 
   const { 
     followCounts, 
@@ -109,8 +110,9 @@ export default function UserProfile() {
     return false;
   };
 
-  const handleDrinkClick = (drink: Drink) => {
+  const handleDrinkClick = (drink: Drink, owner: DrinkOwner) => {
     setViewingDrink(drink);
+    setViewingOwner(owner);
   };
 
   const handleShare = async () => {
@@ -312,8 +314,14 @@ export default function UserProfile() {
       <DrinkDetailModal
         drink={viewingDrink}
         open={!!viewingDrink}
-        onOpenChange={(open) => !open && setViewingDrink(null)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setViewingDrink(null);
+            setViewingOwner(null);
+          }
+        }}
         readOnly={true}
+        owner={viewingOwner}
       />
 
       {/* Follow List Modal */}

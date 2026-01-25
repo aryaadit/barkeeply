@@ -14,10 +14,11 @@ import { toast } from 'sonner';
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Drink, DrinkType } from '@/types/drink';
+import { DrinkOwner } from './DrinkDetailModal';
 
 interface ActivityCardProps {
   activity: ActivityFeedItem;
-  onDrinkClick?: (drink: Drink) => void;
+  onDrinkClick?: (drink: Drink, owner: DrinkOwner) => void;
 }
 
 export function ActivityCard({ activity, onDrinkClick }: ActivityCardProps) {
@@ -94,7 +95,7 @@ export function ActivityCard({ activity, onDrinkClick }: ActivityCardProps) {
   };
 
   const handleDrinkClick = () => {
-    if (onDrinkClick && metadata.name && metadata.type && drinkId) {
+    if (onDrinkClick && metadata.name && metadata.type && drinkId && user) {
       // Create a drink object from the activity metadata
       const drink: Drink = {
         id: drinkId,
@@ -109,7 +110,11 @@ export function ActivityCard({ activity, onDrinkClick }: ActivityCardProps) {
         imageUrl: metadata.image_url || undefined,
         isWishlist: activityType === 'wishlist_added',
       };
-      onDrinkClick(drink);
+      const owner: DrinkOwner = {
+        username: user.username,
+        displayName: user.displayName,
+      };
+      onDrinkClick(drink, owner);
     }
   };
 
