@@ -52,6 +52,21 @@ export function useDrinks() {
   const addDrink = async (drink: Omit<Drink, 'id' | 'dateAdded'>) => {
     if (!user) return null;
 
+    // Check for duplicate drink by name (case-insensitive)
+    const existingDrink = drinks.find(
+      (d) => d.name.toLowerCase().trim() === drink.name.toLowerCase().trim()
+    );
+
+    if (existingDrink) {
+      // If trying to add to wishlist and drink exists, just update wishlist status
+      if (drink.isWishlist && !existingDrink.isWishlist) {
+        await updateDrink(existingDrink.id, { isWishlist: true });
+        return existingDrink;
+      }
+      // Return null to indicate a duplicate was found
+      return { ...existingDrink, isDuplicate: true } as Drink & { isDuplicate?: boolean };
+    }
+
     const priceValue = drink.price?.trim() || null;
 
     const { data, error } = await supabase

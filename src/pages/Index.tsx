@@ -164,7 +164,16 @@ const Index = () => {
       await updateDrink(editingDrink.id, drinkData);
       toast.success('Drink updated', { description: `${drinkData.name} has been updated.` });
     } else {
-      await addDrink(drinkData);
+      const result = await addDrink(drinkData);
+      
+      if (result && 'isDuplicate' in result && result.isDuplicate) {
+        toast.error('This drink already exists', {
+          description: 'You can edit the existing drink or use a different name.',
+          duration: 5000,
+        });
+        return;
+      }
+      
       toast.success('Drink added', { description: `${drinkData.name} has been added to your collection.` });
     }
     setEditingDrink(null);
