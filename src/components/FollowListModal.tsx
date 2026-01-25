@@ -1,6 +1,11 @@
+import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Search, Wine, User, Loader2, X } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import {
   Dialog,
   DialogContent,
@@ -18,6 +23,8 @@ import { FollowButton } from '@/components/FollowButton';
 import { PublicProfile } from '@/types/social';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useDebounce } from '@/hooks/useDebounce';
+import { supabase } from '@/integrations/supabase/client';
 
 interface FollowListModalProps {
   open: boolean;
@@ -25,6 +32,10 @@ interface FollowListModalProps {
   title: 'Followers' | 'Following';
   users: PublicProfile[];
   isLoading: boolean;
+}
+
+interface UserWithDrinkMatch extends PublicProfile {
+  matchedDrink?: string;
 }
 
 export function FollowListModal({
@@ -37,6 +48,78 @@ export function FollowListModal({
   const navigate = useNavigate();
   const { user } = useAuth();
   const isMobile = useIsMobile();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [drinkSearchResults, setDrinkSearchResults] = useState<Map<string, string>>(new Map());
+  const [isSearchingDrinks, setIsSearchingDrinks] = useState(false);
+  
+  const debouncedQuery = useDebounce(searchQuery, 300);
+
+  // Search drinks for matching users
+  useEffect(() => {
+    const searchDrinks = async () => {
+      if (!debouncedQuery || debouncedQuery.length < 2) {
+        setDrinkSearchResults(new Map());
+        return;
+      }
+
+      const userIds = users.map(u => u.userId);
+      if (userIds.length === 0) return;
+
+      setIsSearchingDrinks(true);
+      
+      const { data } = await supabase
+        .from('drinks_public')
+        .select('user_id, name')
+        .in('user_id', userIds)
+        .ilike('name', `%${debouncedQuery}%`)
+        .limit(100);
+
+      if (data) {
+        const matchMap = new Map<string, string>();
+        data.forEach(drink => {
+          if (drink.user_id && drink.name && !matchMap.has(drink.user_id)) {
+            matchMap.set(drink.user_id, drink.name);
+          }
+        });
+        setDrinkSearchResults(matchMap);
+      }
+      
+      setIsSearchingDrinks(false);
+    };
+
+    searchDrinks();
+  }, [debouncedQuery, users]);
+
+  // Filter users by name/username OR by drink matches
+  const filteredUsers = useMemo((): UserWithDrinkMatch[] => {
+    if (!debouncedQuery || debouncedQuery.length < 2) {
+      return users;
+    }
+
+    const query = debouncedQuery.toLowerCase();
+    const results: UserWithDrinkMatch[] = [];
+    
+    users.forEach(u => {
+      const nameMatch = 
+        u.displayName?.toLowerCase().includes(query) ||
+        u.username?.toLowerCase().includes(query);
+      const drinkMatch = drinkSearchResults.get(u.userId);
+      
+      if (nameMatch || drinkMatch) {
+        results.push({ ...u, matchedDrink: drinkMatch });
+      }
+    });
+    
+    return results;
+  }, [users, debouncedQuery, drinkSearchResults]);
+
+  // Reset search when modal closes
+  useEffect(() => {
+    if (!open) {
+      setSearchQuery('');
+      setDrinkSearchResults(new Map());
+    }
+  }, [open]);
 
   const getInitials = (name: string | null | undefined) => {
     if (!name) return '?';
@@ -50,8 +133,48 @@ export function FollowListModal({
     }
   };
 
-  const content = (
-    <ScrollArea className="h-[70vh] max-h-[500px]">
+  const searchInput = (
+    <div className="px-4 pb-3">
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Search by name or drink..."
+          className="pl-10 pr-10 bg-secondary/50"
+        />
+        {(searchQuery || isSearchingDrinks) && (
+          <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+            {isSearchingDrinks && (
+              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+            )}
+            {searchQuery && !isSearchingDrinks && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6"
+                onClick={() => setSearchQuery('')}
+              >
+                <X className="h-3.5 w-3.5" />
+              </Button>
+            )}
+          </div>
+        )}
+      </div>
+      {debouncedQuery.length >= 2 && (
+        <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
+          <User className="h-3 w-3" />
+          <span>Names</span>
+          <span className="text-border">•</span>
+          <Wine className="h-3 w-3" />
+          <span>Drinks logged</span>
+        </div>
+      )}
+    </div>
+  );
+
+  const userList = (
+    <ScrollArea className="h-[60vh] max-h-[400px]">
       {isLoading ? (
         <div className="p-4 space-y-3">
           {[1, 2, 3, 4, 5].map((i) => (
@@ -65,15 +188,19 @@ export function FollowListModal({
             </div>
           ))}
         </div>
-      ) : users.length === 0 ? (
+      ) : filteredUsers.length === 0 ? (
         <div className="py-16 text-center text-muted-foreground">
           <p className="text-base">
-            {title === 'Followers' ? 'No followers yet' : 'Not following anyone yet'}
+            {debouncedQuery.length >= 2
+              ? 'No matches found'
+              : title === 'Followers' 
+                ? 'No followers yet' 
+                : 'Not following anyone yet'}
           </p>
         </div>
       ) : (
         <div className="p-2 space-y-1">
-          {users.map((profile) => (
+          {filteredUsers.map((profile) => (
             <div
               key={profile.userId}
               className="flex items-center gap-3 p-3 rounded-xl hover:bg-muted/50 active:bg-muted transition-colors"
@@ -97,6 +224,12 @@ export function FollowListModal({
                       @{profile.username}
                     </p>
                   )}
+                  {profile.matchedDrink && (
+                    <Badge variant="secondary" className="mt-1 text-xs truncate max-w-[180px]">
+                      <Wine className="h-3 w-3 mr-1" />
+                      {profile.matchedDrink}
+                    </Badge>
+                  )}
                 </div>
               </button>
               
@@ -106,7 +239,7 @@ export function FollowListModal({
                   username={profile.username}
                   variant="outline"
                   size="sm"
-                  className="rounded-full px-4"
+                  className="rounded-full px-4 shrink-0"
                 />
               )}
             </div>
@@ -125,7 +258,8 @@ export function FollowListModal({
               {title}
             </DrawerTitle>
           </DrawerHeader>
-          {content}
+          {searchInput}
+          {userList}
         </DrawerContent>
       </Drawer>
     );
@@ -137,7 +271,8 @@ export function FollowListModal({
         <DialogHeader className="p-4 border-b">
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
-        {content}
+        {searchInput}
+        {userList}
       </DialogContent>
     </Dialog>
   );
