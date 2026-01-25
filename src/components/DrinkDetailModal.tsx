@@ -36,6 +36,11 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
 
+export interface DrinkOwner {
+  username: string;
+  displayName?: string | null;
+}
+
 interface DrinkDetailModalProps {
   drink: Drink | null;
   open: boolean;
@@ -44,6 +49,7 @@ interface DrinkDetailModalProps {
   onDelete?: (id: string) => void;
   onWishlistToggle?: (drinkId: string, isWishlist: boolean) => void;
   readOnly?: boolean;
+  owner?: DrinkOwner | null;
 }
 
 export function DrinkDetailModal({
@@ -54,6 +60,7 @@ export function DrinkDetailModal({
   onDelete,
   onWishlistToggle,
   readOnly = false,
+  owner,
 }: DrinkDetailModalProps) {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
@@ -175,6 +182,23 @@ export function DrinkDetailModal({
         <div className="w-full aspect-video rounded-xl bg-primary/10 flex items-center justify-center">
           <span className="text-6xl">{drinkTypeIcons[displayDrink.type]}</span>
         </div>
+      )}
+
+      {/* Owner Info - shown when viewing from feed/profile */}
+      {owner && (
+        <button
+          type="button"
+          onClick={() => {
+            onOpenChange(false);
+            navigate(`/u/${owner.username}`);
+          }}
+          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <span>Logged by</span>
+          <span className="font-medium text-foreground">
+            @{owner.username}
+          </span>
+        </button>
       )}
 
       {/* Header Info */}

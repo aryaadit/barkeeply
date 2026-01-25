@@ -14,6 +14,7 @@ import { DrinkDetailModal } from '@/components/DrinkDetailModal';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Drink } from '@/types/drink';
+import { DrinkOwner } from '@/components/DrinkDetailModal';
 
 export default function Feed() {
   const navigate = useNavigate();
@@ -24,6 +25,7 @@ export default function Feed() {
   
   const [showUsernameSetup, setShowUsernameSetup] = useState(false);
   const [viewingDrink, setViewingDrink] = useState<Drink | null>(null);
+  const [viewingOwner, setViewingOwner] = useState<DrinkOwner | null>(null);
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -44,8 +46,9 @@ export default function Feed() {
     refetchProfile();
   };
 
-  const handleDrinkClick = (drink: Drink) => {
+  const handleDrinkClick = (drink: Drink, owner: DrinkOwner) => {
     setViewingDrink(drink);
+    setViewingOwner(owner);
   };
 
   if (authLoading || profileLoading) {
@@ -126,8 +129,14 @@ export default function Feed() {
       <DrinkDetailModal
         drink={viewingDrink}
         open={!!viewingDrink}
-        onOpenChange={(open) => !open && setViewingDrink(null)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setViewingDrink(null);
+            setViewingOwner(null);
+          }
+        }}
         readOnly={true}
+        owner={viewingOwner}
       />
 
       {/* Username Setup Modal */}
