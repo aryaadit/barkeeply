@@ -46,7 +46,7 @@ const BottomNavigation = ({ onSearchFocus }: BottomNavigationProps) => {
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden">
+    <nav className="fixed left-0 right-0 z-50 md:hidden bottom-[env(safe-area-inset-bottom,0px)]" style={{ bottom: 0 }}>
       {/* Backdrop blur background */}
       <div className="absolute inset-0 bg-background/80 backdrop-blur-xl border-t border-border/50" />
       
