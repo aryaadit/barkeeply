@@ -21,6 +21,7 @@ import { EmptyState } from '@/components/EmptyState';
 import { ProfileMenu } from '@/components/ProfileMenu';
 import { TestFlightBanner } from '@/components/TestFlightBanner';
 import { OnboardingTipCard } from '@/components/OnboardingTipCard';
+import { WelcomeCarousel } from '@/components/WelcomeCarousel';
 import BottomNavigation from '@/components/BottomNavigation';
 
 import { Button } from '@/components/ui/button';
@@ -59,7 +60,7 @@ const Index = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const appInfo = useAppInfo();
-  const { isStepVisible, dismissStep } = useOnboarding();
+  const { isStepVisible, dismissStep, showWelcomeCarousel, completeWelcome } = useOnboarding();
   const { drinks, isLoading, addDrink, updateDrink, deleteDrink, filterDrinks, getDrinkCountByType, migrateDrinksToOther } = useDrinks();
   const { customTypes } = useCustomDrinkTypes();
   const [selectedType, setSelectedType] = useState<DrinkType | null>(null);
@@ -285,6 +286,11 @@ const Index = () => {
 
   if (!user) {
     return null;
+  }
+
+  // Show welcome carousel for first-time users
+  if (showWelcomeCarousel) {
+    return <WelcomeCarousel onComplete={completeWelcome} />;
   }
 
   return (

@@ -8,6 +8,7 @@ type OnboardingStep =
   | 'completed';
 
 interface OnboardingState {
+  hasSeenWelcome: boolean;
   hasCompletedOnboarding: boolean;
   currentStep: OnboardingStep;
   dismissedSteps: OnboardingStep[];
@@ -15,9 +16,11 @@ interface OnboardingState {
 
 interface OnboardingContextType {
   state: OnboardingState;
+  showWelcomeCarousel: boolean;
   isStepVisible: (step: OnboardingStep) => boolean;
   dismissStep: (step: OnboardingStep) => void;
   completeOnboarding: () => void;
+  completeWelcome: () => void;
   resetOnboarding: () => void;
   showTour: () => void;
 }
@@ -25,6 +28,7 @@ interface OnboardingContextType {
 const STORAGE_KEY = 'barkeeply_onboarding';
 
 const defaultState: OnboardingState = {
+  hasSeenWelcome: false,
   hasCompletedOnboarding: false,
   currentStep: 'welcome',
   dismissedSteps: [],
@@ -86,17 +90,27 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
+  const completeWelcome = useCallback(() => {
+    setState(prev => ({
+      ...prev,
+      hasSeenWelcome: true,
+    }));
+  }, []);
+
   const resetOnboarding = useCallback(() => {
     setState(defaultState);
   }, []);
 
   const showTour = useCallback(() => {
-    setState({
+    setState(prev => ({
+      ...prev,
       hasCompletedOnboarding: false,
       currentStep: 'welcome',
       dismissedSteps: [],
-    });
+    }));
   }, []);
+
+  const showWelcomeCarousel = !state.hasSeenWelcome;
 
   if (!isLoaded) {
     return null;
@@ -105,9 +119,11 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
   return (
     <OnboardingContext.Provider value={{
       state,
+      showWelcomeCarousel,
       isStepVisible,
       dismissStep,
       completeOnboarding,
+      completeWelcome,
       resetOnboarding,
       showTour,
     }}>
