@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Sparkles, Wine, Users, Share2, Lock } from 'lucide-react';
+import { Sparkles, Wine, Users, Lock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -9,6 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Drink } from '@/types/drink';
 import { PublicProfile } from '@/types/social';
+import { NetworkComparisonSection } from './NetworkComparisonSection';
 import { cn } from '@/lib/utils';
 
 interface CollectionCompareSectionProps {
@@ -166,53 +166,9 @@ export function CollectionCompareSection({
     );
   }
 
-  // Own profile - show share prompt instead of comparison
+  // Own profile - show aggregate network comparison
   if (isOwnProfile) {
-    const handleShare = async () => {
-      const profileUrl = `${window.location.origin}/u/${profile.username}`;
-      const shareData = {
-        title: `${profile.displayName || profile.username}'s Profile`,
-        text: `Check out my drink collection on Barkeeply`,
-        url: profileUrl,
-      };
-
-      if (navigator.share && navigator.canShare?.(shareData)) {
-        try {
-          await navigator.share(shareData);
-        } catch (error) {
-          if ((error as Error).name !== 'AbortError') {
-            copyToClipboard(profileUrl);
-          }
-        }
-      } else {
-        copyToClipboard(profileUrl);
-      }
-    };
-
-    const copyToClipboard = async (url: string) => {
-      try {
-        await navigator.clipboard.writeText(url);
-        toast.success('Profile link copied to clipboard');
-      } catch {
-        toast.error('Failed to copy link');
-      }
-    };
-
-    return (
-      <div className="rounded-xl border border-border/50 bg-gradient-to-br from-primary/5 to-transparent p-6 text-center">
-        <div className="h-12 w-12 mx-auto rounded-full bg-primary/10 flex items-center justify-center mb-4">
-          <Users className="h-6 w-6 text-primary" />
-        </div>
-        <h3 className="font-semibold mb-2">Compare Collections with Friends</h3>
-        <p className="text-sm text-muted-foreground mb-4">
-          Share your profile so friends can see which drinks you have in common and discover new ones from your collection
-        </p>
-        <Button onClick={handleShare} className="gap-2">
-          <Share2 className="h-4 w-4" />
-          Share Your Profile
-        </Button>
-      </div>
-    );
+    return <NetworkComparisonSection onDrinkClick={onDrinkClick} />;
   }
 
   // Can't view their activity
