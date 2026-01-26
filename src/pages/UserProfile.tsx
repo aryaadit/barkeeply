@@ -42,6 +42,7 @@ export default function UserProfile() {
   const [viewingDrink, setViewingDrink] = useState<Drink | null>(null);
   const [viewingOwner, setViewingOwner] = useState<DrinkOwner | null>(null);
   const [activeTab, setActiveTab] = useState('overview');
+  // Note: 'network' tab shows Network Comparison for own profile, Collections Compare for others
 
   const { 
     followCounts, 
@@ -111,10 +112,10 @@ export default function UserProfile() {
     loadActivities();
   }, [profile, activeTab]);
 
-  // Load collections when switching to Collections tab
+  // Load collections when switching to Network tab (only for other users' profiles)
   useEffect(() => {
     const loadCollections = async () => {
-      if (!profile?.userId || activeTab !== 'collections') return;
+      if (!profile?.userId || activeTab !== 'network' || isOwnProfile) return;
 
       setCollectionsLoading(true);
 
@@ -361,7 +362,7 @@ export default function UserProfile() {
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="w-full grid grid-cols-3">
             <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="collections">Collections</TabsTrigger>
+            <TabsTrigger value="network">{isOwnProfile ? 'Network' : 'Collections'}</TabsTrigger>
             <TabsTrigger value="activity">Activity</TabsTrigger>
           </TabsList>
 
@@ -397,9 +398,9 @@ export default function UserProfile() {
             )}
           </TabsContent>
 
-          {/* Collections Tab */}
-          <TabsContent value="collections" className="mt-4 space-y-8">
-            {/* Collection Comparison Section */}
+          {/* Network/Collections Tab */}
+          <TabsContent value="network" className="mt-4 space-y-8">
+            {/* Collection Comparison Section (Network view for own profile, Compare for others) */}
             <CollectionCompareSection
               profileUserId={profile.userId}
               profile={profile}
@@ -415,17 +416,19 @@ export default function UserProfile() {
               }}
             />
 
-            {/* Collections Showcase */}
-            <div>
-              <p className="text-xs text-muted-foreground mb-4">
-                Curated groups of drinks from this user's library
-              </p>
-              <ProfileCollectionsShowcase 
-                collections={collections} 
-                isLoading={collectionsLoading}
-                userId={profile.userId}
-              />
-            </div>
+            {/* Collections Showcase - only show on other users' profiles */}
+            {!isOwnProfile && (
+              <div>
+                <p className="text-xs text-muted-foreground mb-4">
+                  Curated groups of drinks from this user's library
+                </p>
+                <ProfileCollectionsShowcase 
+                  collections={collections} 
+                  isLoading={collectionsLoading}
+                  userId={profile.userId}
+                />
+              </div>
+            )}
           </TabsContent>
 
           {/* Activity Tab */}
