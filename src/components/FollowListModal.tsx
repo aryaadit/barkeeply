@@ -134,7 +134,7 @@ export function FollowListModal({
   };
 
   const searchInput = (
-    <div className="px-4 pb-3">
+    <div className="px-4 py-4 border-b border-border/30">
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
