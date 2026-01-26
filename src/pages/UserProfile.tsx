@@ -362,7 +362,7 @@ export default function UserProfile() {
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="w-full grid grid-cols-3">
             <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="network">{isOwnProfile ? 'Network' : 'Collections'}</TabsTrigger>
+            <TabsTrigger value="network">Network</TabsTrigger>
             <TabsTrigger value="activity">Activity</TabsTrigger>
           </TabsList>
 
@@ -416,19 +416,6 @@ export default function UserProfile() {
               }}
             />
 
-            {/* Collections Showcase - only show on other users' profiles */}
-            {!isOwnProfile && (
-              <div>
-                <p className="text-xs text-muted-foreground mb-4">
-                  Curated groups of drinks from this user's library
-                </p>
-                <ProfileCollectionsShowcase 
-                  collections={collections} 
-                  isLoading={collectionsLoading}
-                  userId={profile.userId}
-                />
-              </div>
-            )}
           </TabsContent>
 
           {/* Activity Tab */}
