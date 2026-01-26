@@ -1,205 +1,101 @@
 
-# Profile Page Redesign
 
-Transform the user profile page from a simple activity feed into a comprehensive showcase of the user's drink journey with statistics, collections, and top drinks.
+# Migrate Onboarding State to Database
+
+## Overview
+Move the onboarding progress tracking from browser localStorage to the user's profile in the database. This ensures onboarding state persists across all devices and browsers where the user logs in.
 
 ## Current State
-The profile page (`/u/:username`) currently only shows:
-- Profile header (avatar, name, bio, follow stats, follow button)
-- A single "Activity" tab showing recent drink activity
+- Onboarding state is stored in `localStorage` under the key `barkeeply_onboarding`
+- State includes: `hasSeenWelcome`, `hasCompletedOnboarding`, `currentStep`, `dismissedSteps`
+- State is lost when users clear browser data or switch devices
 
-## Proposed New Design
+## Implementation Plan
 
-### Profile Header (Keep & Enhance)
-Keep the existing header with avatar, display name, username, bio, follower/following counts, and follow button. Add a **total drinks count** stat next to followers/following.
+### Step 1: Add onboarding columns to profiles table
+Create a database migration to add onboarding fields to the `profiles` table:
 
-### New Tab Structure
-Replace the single "Activity" tab with a multi-tab layout:
+| Column | Type | Default | Purpose |
+|--------|------|---------|---------|
+| `has_seen_welcome` | boolean | false | Tracks if user has completed welcome carousel |
+| `onboarding_step` | text | 'welcome' | Current onboarding step |
+| `dismissed_onboarding_steps` | text[] | {} | Array of dismissed step names |
 
-| Tab | Content |
-|-----|---------|
-| **Overview** | Stats highlights + top drinks showcase |
-| **Collections** | User's public collections grid |
-| **Activity** | Existing activity feed (moved here) |
+### Step 2: Update the Profile TypeScript type
+Add new fields to the `Profile` interface in `src/types/profile.ts`:
+- `hasSeenWelcome: boolean`
+- `onboardingStep: OnboardingStep`
+- `dismissedOnboardingSteps: OnboardingStep[]`
 
----
+### Step 3: Update useProfile hook
+Modify `src/hooks/useProfile.ts` to:
+- Fetch the new onboarding fields from the database
+- Support updating onboarding state via `updateProfile`
 
-## Tab 1: Overview (Default Tab)
+### Step 4: Rewrite useOnboarding hook
+Transform `src/hooks/useOnboarding.tsx` to:
+- Remove localStorage logic entirely
+- Consume onboarding state from `useProfile` hook
+- Call `updateProfile` when state changes
+- Maintain a local cache to avoid flickering during async updates
+- Handle unauthenticated users gracefully (show carousel, don't persist)
 
-### Statistics Section
-A grid of stat cards showing:
-- **Total Drinks Logged** - count of all drinks (excluding wishlist)
-- **Favorite Type** - most frequently logged drink type with icon
-- **Average Rating** - mean of all ratings
-- **Top Rated** - highest rated drink name
-- **Member Since** - profile creation date
-
-### Top Drinks Showcase
-A horizontal scrollable list or grid showing the user's **top 6 highest-rated drinks**:
-- Drink image (or type icon fallback)
-- Name
-- Rating stars
-- Type badge
-
-Clicking a drink opens the standard DrinkDetailModal in read-only mode.
-
-### Privacy Considerations
-- For **own profile**: Show all stats and drinks
-- For **public profiles**: Show stats and top drinks
-- For **followers-only profiles**: Show stats and top drinks only if following
-- For **private profiles**: Show "Stats are private" message
+### Step 5: Migrate existing localStorage state (optional one-time sync)
+Add logic to check for existing localStorage data on first load after migration:
+- If user has localStorage onboarding state and database has defaults, sync to database
+- Clear localStorage after successful migration
+- This ensures users don't re-see the welcome carousel after the update
 
 ---
 
-## Tab 2: Collections
+## Technical Details
 
-Display the user's **public collections** in a grid layout using the existing `CollectionCard` component.
-
-### Privacy & Data Access
-- Only show collections where `is_public = true`
-- Uses existing `collections_public` view to avoid exposing user_id
-- Clicking a collection navigates to `/c/:shareId` (shared collection page)
-
-### Empty State
-"No public collections" message with appropriate icon.
-
----
-
-## Tab 3: Activity (Existing)
-Move the current activity feed here as a secondary tab. Keep all existing functionality including:
-- Activity cards
-- Privacy visibility checks
-- Drink detail modal on click
-
----
-
-## Technical Implementation
-
-### New Data Fetching
-
-**Profile Stats Query** (for Overview tab):
+### Database Migration SQL
 ```sql
--- Count drinks, calculate average rating, find top type
-SELECT 
-  COUNT(*) FILTER (WHERE is_wishlist = false) as total_drinks,
-  AVG(rating) FILTER (WHERE rating > 0) as avg_rating,
-  MAX(rating) as top_rating
-FROM drinks 
-WHERE user_id = :userId
+ALTER TABLE public.profiles
+ADD COLUMN IF NOT EXISTS has_seen_welcome boolean DEFAULT false,
+ADD COLUMN IF NOT EXISTS onboarding_step text DEFAULT 'welcome',
+ADD COLUMN IF NOT EXISTS dismissed_onboarding_steps text[] DEFAULT '{}';
 ```
 
-**Top Drinks Query**:
-```sql
-SELECT * FROM drinks 
-WHERE user_id = :userId 
-  AND is_wishlist = false 
-  AND rating IS NOT NULL
-ORDER BY rating DESC, date_added DESC
-LIMIT 6
+### Updated Profile Type
+```typescript
+export interface Profile {
+  // ...existing fields...
+  hasSeenWelcome: boolean;
+  onboardingStep: string;
+  dismissedOnboardingSteps: string[];
+}
 ```
 
-**Public Collections Query**:
-```sql
-SELECT * FROM collections_public 
-WHERE user_id = :userId 
-  AND is_public = true
+### Updated useOnboarding Hook Architecture
+```text
+┌─────────────────────────────────────────────────────────┐
+│                   useOnboarding Hook                     │
+├─────────────────────────────────────────────────────────┤
+│  Reads from:                                             │
+│    - useProfile() for persisted state                   │
+│    - Local state for optimistic UI updates              │
+│                                                          │
+│  Writes to:                                              │
+│    - updateProfile() to persist changes                 │
+│    - Local state immediately for responsiveness         │
+│                                                          │
+│  Fallback:                                              │
+│    - If no user logged in, use localStorage (guest)     │
+│    - Sync localStorage → database on login              │
+└─────────────────────────────────────────────────────────┘
 ```
-
-### RLS Considerations
-
-**Problem**: Current drinks table RLS only allows users to see their own drinks. This prevents visitors from seeing another user's top drinks or stats.
-
-**Solution Options**:
-1. **Create a `drinks_public` view** with `security_definer` that only exposes non-sensitive fields (name, type, rating, image_url, created_at) for users with public activity visibility
-2. **Use an edge function** to aggregate stats without exposing individual drink records
-3. **Add SELECT RLS policy** allowing public drink viewing based on the owner's `activity_visibility` setting
-
-**Recommended approach**: Create a `drinks_public` view similar to `profiles_public` that:
-- Only returns drinks for users with `activity_visibility = 'public'` OR followers if `= 'followers'`
-- Excludes sensitive fields like notes, location, price
-- Respects privacy settings
 
 ### Files to Modify
+1. **Database migration** - Add columns to `profiles` table
+2. **`src/types/profile.ts`** - Add new type fields
+3. **`src/hooks/useProfile.ts`** - Fetch and update new fields
+4. **`src/hooks/useOnboarding.tsx`** - Rewrite to use profile instead of localStorage
 
-| File | Changes |
-|------|---------|
-| `src/pages/UserProfile.tsx` | Complete refactor with tabs, stats, collections grid |
-| `src/hooks/useProfileStats.ts` | **NEW** - Hook for fetching profile statistics |
-| `src/components/ProfileStatsCard.tsx` | **NEW** - Stats display component |
-| `src/components/TopDrinksShowcase.tsx` | **NEW** - Top drinks grid component |
+### Edge Cases Handled
+- **Guest users**: Will still see welcome carousel, but state won't persist
+- **Existing users**: One-time migration from localStorage to database
+- **Slow network**: Optimistic local updates prevent UI flickering
+- **Multiple tabs**: Database source of truth prevents conflicts
 
-### Database Migration
-Create a new view for public drink access:
-```sql
-CREATE OR REPLACE VIEW public.drinks_public 
-WITH (security_invoker=on) AS
-SELECT 
-  d.id,
-  d.user_id,
-  d.name,
-  d.type,
-  d.rating,
-  d.image_url,
-  d.date_added,
-  d.is_wishlist
-FROM public.drinks d
-JOIN public.profiles p ON p.user_id = d.user_id
-WHERE 
-  p.activity_visibility = 'public'
-  OR (
-    p.activity_visibility = 'followers' 
-    AND EXISTS (
-      SELECT 1 FROM follows f 
-      WHERE f.following_id = d.user_id 
-        AND f.follower_id = auth.uid()
-        AND f.status = 'accepted'
-    )
-  );
-```
-
----
-
-## UI Mockup
-
-```text
-┌─────────────────────────────────────────────────┐
-│ ← @username                            [Share] │
-├─────────────────────────────────────────────────┤
-│  ┌──────┐                                       │
-│  │Avatar│  Display Name                         │
-│  │      │  @username                            │
-│  └──────┘  Bio text here...                     │
-│                                                 │
-│  42 drinks  │  156 followers  │  89 following   │
-│                                                 │
-│  [Follow] or [Edit Profile]                     │
-├─────────────────────────────────────────────────┤
-│  [ Overview ]  [ Collections ]  [ Activity ]    │
-├─────────────────────────────────────────────────┤
-│                                                 │
-│  STATS                                          │
-│  ┌─────────┐ ┌─────────┐ ┌─────────┐            │
-│  │ 42      │ │ 🥃      │ │ 4.2★    │            │
-│  │ Drinks  │ │ Whiskey │ │ Avg     │            │
-│  └─────────┘ └─────────┘ └─────────┘            │
-│                                                 │
-│  TOP DRINKS                                     │
-│  ┌───┐ ┌───┐ ┌───┐ ┌───┐ ┌───┐ ┌───┐           │
-│  │ 🥃 │ │ 🍺 │ │ 🍷 │ │ 🍸 │ │ 🥃 │ │ 🍺 │        │
-│  │5★ │ │5★ │ │5★ │ │4★ │ │4★ │ │4★ │           │
-│  └───┘ └───┘ └───┘ └───┘ └───┘ └───┘           │
-│                                                 │
-└─────────────────────────────────────────────────┘
-```
-
----
-
-## Summary
-
-This redesign transforms the profile page into a proper showcase of each user's drink journey:
-
-1. **Overview tab** - At-a-glance stats and top drinks
-2. **Collections tab** - Browsable public collections  
-3. **Activity tab** - Chronological activity feed (existing)
-
-All privacy settings are respected, using the same visibility logic already in place for the activity feed.
