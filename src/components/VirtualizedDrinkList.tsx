@@ -1,5 +1,5 @@
 import { useRef, memo, useCallback, useEffect } from 'react';
-import { useVirtualizer } from '@tanstack/react-virtual';
+import { useWindowVirtualizer } from '@tanstack/react-virtual';
 import { Drink } from '@/types/drink';
 import { MemoizedDrinkListItem } from './MemoizedDrinkListItem';
 import { Loader2 } from 'lucide-react';
@@ -14,7 +14,7 @@ interface VirtualizedDrinkListProps {
 }
 
 const ITEM_GAP = 12;
-const LOAD_MORE_THRESHOLD = 5; // Load more when within 5 items of bottom
+const LOAD_MORE_THRESHOLD = 5;
 
 export const VirtualizedDrinkList = memo(function VirtualizedDrinkList({
   drinks,
@@ -24,14 +24,14 @@ export const VirtualizedDrinkList = memo(function VirtualizedDrinkList({
   isFetchingNextPage = false,
   onLoadMore,
 }: VirtualizedDrinkListProps) {
-  const parentRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
 
-  const virtualizer = useVirtualizer({
+  const virtualizer = useWindowVirtualizer({
     count: drinks.length,
-    getScrollElement: () => parentRef.current,
     estimateSize: () => 110,
     overscan: 5,
     gap: ITEM_GAP,
+    scrollMargin: listRef.current?.offsetTop ?? 0,
   });
 
   const items = virtualizer.getVirtualItems();
@@ -43,7 +43,6 @@ export const VirtualizedDrinkList = memo(function VirtualizedDrinkList({
     const lastItem = items[items.length - 1];
     if (!lastItem) return;
 
-    // If we're within threshold of the end, load more
     if (lastItem.index >= drinks.length - LOAD_MORE_THRESHOLD) {
       onLoadMore();
     }
@@ -62,55 +61,46 @@ export const VirtualizedDrinkList = memo(function VirtualizedDrinkList({
   }
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div ref={listRef} className="max-w-2xl mx-auto pb-24">
       <div
-        ref={parentRef}
-        className="overflow-auto pb-24"
         style={{
-          height: 'calc(100dvh - 320px)',
-          minHeight: '300px',
+          height: `${virtualizer.getTotalSize()}px`,
+          width: '100%',
+          position: 'relative',
         }}
       >
-        <div
-          style={{
-            height: `${virtualizer.getTotalSize()}px`,
-            width: '100%',
-            position: 'relative',
-          }}
-        >
-          {items.map((virtualRow) => {
-            const drink = drinks[virtualRow.index];
-            return (
-              <div
-                key={drink.id}
-                data-index={virtualRow.index}
-                ref={virtualizer.measureElement}
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  width: '100%',
-                  transform: `translateY(${virtualRow.start}px)`,
-                }}
-              >
-                <MemoizedDrinkListItem
-                  drink={drink}
-                  onClick={() => handleClick(drink)}
-                  onWishlistToggle={handleWishlistToggle}
-                />
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Loading indicator for infinite scroll */}
-        {isFetchingNextPage && (
-          <div className="flex items-center justify-center py-4">
-            <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
-            <span className="ml-2 text-sm text-muted-foreground">Loading more...</span>
-          </div>
-        )}
+        {items.map((virtualRow) => {
+          const drink = drinks[virtualRow.index];
+          return (
+            <div
+              key={drink.id}
+              data-index={virtualRow.index}
+              ref={virtualizer.measureElement}
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                transform: `translateY(${virtualRow.start - virtualizer.options.scrollMargin}px)`,
+              }}
+            >
+              <MemoizedDrinkListItem
+                drink={drink}
+                onClick={() => handleClick(drink)}
+                onWishlistToggle={handleWishlistToggle}
+              />
+            </div>
+          );
+        })}
       </div>
+
+      {/* Loading indicator for infinite scroll */}
+      {isFetchingNextPage && (
+        <div className="flex items-center justify-center py-4">
+          <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+          <span className="ml-2 text-sm text-muted-foreground">Loading more...</span>
+        </div>
+      )}
     </div>
   );
 });
