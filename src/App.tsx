@@ -21,12 +21,13 @@ import CollectionDetail from "./pages/CollectionDetail";
 import SharedCollection from "./pages/SharedCollection";
 import Feed from "./pages/Feed";
 import UserProfile from "./pages/UserProfile";
+import StoreListing from "./pages/StoreListing";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
 // Routes where bottom nav should NOT appear
-const ROUTES_WITHOUT_NAV = ['/auth', '/reset-password', '/share/', '/c/'];
+const ROUTES_WITHOUT_NAV = ['/auth', '/reset-password', '/share/', '/c/', '/store-listing'];
 
 function AnimatedRoutes() {
   const location = useLocation();
@@ -53,6 +54,7 @@ function AnimatedRoutes() {
             <Route path="/c/:shareId" element={<SharedCollection />} />
             <Route path="/feed" element={<Feed />} />
             <Route path="/u/:username" element={<UserProfile />} />
+            <Route path="/store-listing" element={<StoreListing />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
