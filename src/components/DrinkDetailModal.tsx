@@ -138,9 +138,12 @@ export function DrinkDetailModal({
 
   const drinkCollections = collections.filter((c) => drinkCollectionIds.includes(c.id));
 
-  if (!displayDrink) return null;
+  // Get signed URL for image preview - must be called unconditionally (before any returns)
+  const { signedUrl: imageSignedUrl } = useSignedUrl(displayDrink?.imageUrl);
 
+  // Handler functions - defined before early return so they can be used in content
   const handleEdit = () => {
+    if (!displayDrink) return;
     onOpenChange(false);
     onEdit?.(displayDrink);
   };
@@ -150,6 +153,7 @@ export function DrinkDetailModal({
   };
 
   const handleConfirmDelete = () => {
+    if (!displayDrink) return;
     setShowDeleteConfirm(false);
     onOpenChange(false);
     onDelete?.(displayDrink.id);
@@ -162,8 +166,7 @@ export function DrinkDetailModal({
     </div>
   );
 
-  // Get signed URL for image preview
-  const { signedUrl: imageSignedUrl } = useSignedUrl(displayDrink.imageUrl);
+  if (!displayDrink) return null;
 
   const content = isLoadingFull ? loadingContent : (
     <div className="space-y-6">
