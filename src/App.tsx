@@ -1,6 +1,7 @@
+import { useEffect } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import { AuthProvider } from "@/hooks/useAuth";
@@ -10,6 +11,8 @@ import { OnboardingProvider } from "@/hooks/useOnboarding";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { PageTransition } from "@/components/PageTransition";
 import BottomNavigation from "@/components/BottomNavigation";
+import { OfflineBanner } from "@/components/OfflineBanner";
+import { queryClient, setupCachePersistence } from "@/lib/queryClient";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
@@ -24,8 +27,6 @@ import UserProfile from "./pages/UserProfile";
 import StoreListing from "./pages/StoreListing";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import NotFound from "./pages/NotFound";
-
-const queryClient = new QueryClient();
 
 // Routes where bottom nav should NOT appear
 const ROUTES_WITHOUT_NAV = ['/auth', '/reset-password', '/share/', '/c/', '/store-listing', '/privacy'];
@@ -69,23 +70,30 @@ function AnimatedRoutes() {
   );
 }
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <ThemeProvider>
-        <AuthProvider>
-          <OnboardingProvider>
-            <Toaster />
-            <BrowserRouter>
-              <AnalyticsProvider>
-                <AnimatedRoutes />
-              </AnalyticsProvider>
-            </BrowserRouter>
-          </OnboardingProvider>
-        </AuthProvider>
-      </ThemeProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  useEffect(() => {
+    setupCachePersistence();
+  }, []);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <OnboardingProvider>
+              <Toaster />
+              <OfflineBanner />
+              <BrowserRouter>
+                <AnalyticsProvider>
+                  <AnimatedRoutes />
+                </AnalyticsProvider>
+              </BrowserRouter>
+            </OnboardingProvider>
+          </AuthProvider>
+        </ThemeProvider>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
