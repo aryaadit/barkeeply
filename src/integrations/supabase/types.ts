@@ -457,6 +457,30 @@ export type Database = {
           type: string | null
           user_id: string | null
         }
+        Insert: {
+          brand?: string | null
+          created_at?: string | null
+          date_added?: string | null
+          id?: string | null
+          image_url?: string | null
+          is_wishlist?: boolean | null
+          name?: string | null
+          rating?: number | null
+          type?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          brand?: string | null
+          created_at?: string | null
+          date_added?: string | null
+          id?: string | null
+          image_url?: string | null
+          is_wishlist?: boolean | null
+          name?: string | null
+          rating?: number | null
+          type?: string | null
+          user_id?: string | null
+        }
         Relationships: []
       }
       profiles_public: {
