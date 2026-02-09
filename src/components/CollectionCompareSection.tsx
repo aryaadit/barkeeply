@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { StorageImage } from '@/components/StorageImage';
 import { Sparkles, Wine, Users, Lock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -265,8 +266,8 @@ export function CollectionCompareSection({
               >
                 <div className="aspect-square rounded-lg overflow-hidden bg-muted border border-border/50 transition-transform group-hover:scale-105 group-active:scale-95">
                   {drink.imageUrl ? (
-                    <img
-                      src={drink.imageUrl}
+                    <StorageImage
+                      storagePath={drink.imageUrl}
                       alt={drink.name}
                       className="w-full h-full object-cover"
                     />
@@ -313,8 +314,8 @@ export function CollectionCompareSection({
               >
                 <div className="aspect-square rounded-lg overflow-hidden bg-muted border border-amber-500/20 transition-transform group-hover:scale-105 group-active:scale-95 relative">
                   {drink.imageUrl ? (
-                    <img
-                      src={drink.imageUrl}
+                    <StorageImage
+                      storagePath={drink.imageUrl}
                       alt={drink.name}
                       className="w-full h-full object-cover"
                     />

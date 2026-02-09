@@ -1,4 +1,5 @@
 import { FolderOpen, Star, Wine, ChevronRight } from 'lucide-react';
+import { StorageImage } from '@/components/StorageImage';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -168,8 +169,8 @@ export function ProfileCollectionsShowcase({ collections, isLoading, userId }: P
                       style={{ zIndex: 3 - index }}
                     >
                       {drink.imageUrl ? (
-                        <img
-                          src={drink.imageUrl}
+                        <StorageImage
+                          storagePath={drink.imageUrl}
                           alt={drink.name}
                           className="w-full h-full object-cover"
                         />

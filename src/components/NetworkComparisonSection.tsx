@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { StorageImage } from '@/components/StorageImage';
 import { Sparkles, Wine, Users, TrendingUp } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
@@ -271,8 +272,8 @@ export function NetworkComparisonSection({ onDrinkClick }: NetworkComparisonSect
               >
                 <div className="aspect-square rounded-lg overflow-hidden bg-muted border border-border/50 transition-transform group-hover:scale-105 group-active:scale-95 relative">
                   {drink.imageUrl ? (
-                    <img
-                      src={drink.imageUrl}
+                    <StorageImage
+                      storagePath={drink.imageUrl}
                       alt={drink.name}
                       className="w-full h-full object-cover"
                     />
@@ -327,8 +328,8 @@ export function NetworkComparisonSection({ onDrinkClick }: NetworkComparisonSect
               >
                 <div className="aspect-square rounded-lg overflow-hidden bg-muted border border-amber-500/20 transition-transform group-hover:scale-105 group-active:scale-95 relative">
                   {drink.imageUrl ? (
-                    <img
-                      src={drink.imageUrl}
+                    <StorageImage
+                      storagePath={drink.imageUrl}
                       alt={drink.name}
                       className="w-full h-full object-cover"
                     />

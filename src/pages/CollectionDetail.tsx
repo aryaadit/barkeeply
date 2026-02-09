@@ -7,6 +7,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { DrinkListItem } from '@/components/DrinkListItem';
 import { DrinkDetailModal } from '@/components/DrinkDetailModal';
 import { CreateCollectionDialog } from '@/components/CreateCollectionDialog';
+import { StorageImage } from '@/components/StorageImage';
 
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -381,8 +382,8 @@ const CollectionDetail = () => {
                       onCheckedChange={() => handleToggleDrinkInCollection(drink.id)}
                     />
                     {drink.imageUrl ? (
-                      <img
-                        src={drink.imageUrl}
+                      <StorageImage
+                        storagePath={drink.imageUrl}
                         alt={drink.name}
                         className="w-10 h-10 rounded-lg object-cover"
                       />

@@ -1,4 +1,5 @@
 import { Wine } from 'lucide-react';
+import { StorageImage } from '@/components/StorageImage';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DrinkTypeBadge } from '@/components/DrinkTypeBadge';
@@ -48,8 +49,8 @@ export function TopDrinksShowcase({ drinks, isLoading, onDrinkClick }: TopDrinks
             {/* Image or Icon */}
             <div className="h-20 bg-muted/50 flex items-center justify-center">
               {drink.imageUrl ? (
-                <img
-                  src={drink.imageUrl}
+                <StorageImage
+                  storagePath={drink.imageUrl}
                   alt={drink.name}
                   className="w-full h-full object-cover"
                 />
