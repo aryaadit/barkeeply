@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { DrinkType } from '@/types/drink';
+import { TasteSignature, CategoryTopDrinks } from '@/types/taste';
 import { queryKeys } from '@/lib/queryKeys';
 import * as profileStatsService from '@/services/profileStatsService';
 
@@ -24,6 +25,8 @@ export interface TopDrink {
 interface UseProfileStatsResult {
   stats: ProfileStats | null;
   topDrinks: TopDrink[];
+  tasteSignature: TasteSignature | null;
+  categoryTopDrinks: CategoryTopDrinks[];
   isLoading: boolean;
   error: string | null;
   canViewStats: boolean;
@@ -47,6 +50,8 @@ export function useProfileStats(
   return {
     stats: data?.stats ?? null,
     topDrinks: data?.topDrinks ?? [],
+    tasteSignature: data?.tasteSignature ?? null,
+    categoryTopDrinks: data?.categoryTopDrinks ?? [],
     isLoading,
     error: error ? 'Failed to load profile stats' : null,
     canViewStats,

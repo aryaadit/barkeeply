@@ -1,9 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Activity, Users, Search } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useActivityFeed } from '@/hooks/useActivityFeed';
+import { useLikes } from '@/hooks/useLikes';
+import { useDiscovery } from '@/hooks/useDiscovery';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 import { PageHeader } from '@/components/PageHeader';
@@ -11,6 +13,8 @@ import { ActivityCard } from '@/components/ActivityCard';
 import { UserSearch } from '@/components/UserSearch';
 import { UsernameSetup } from '@/components/UsernameSetup';
 import { DrinkDetailModal } from '@/components/DrinkDetailModal';
+import { LikedBySheet } from '@/components/LikedBySheet';
+import { DiscoverySection } from '@/components/DiscoverySection';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Drink } from '@/types/drink';
@@ -22,10 +26,22 @@ export default function Feed() {
   const { profile, isLoading: profileLoading, refetch: refetchProfile } = useProfile();
   const { activities, isLoading: feedLoading, hasMore, loadMore } = useActivityFeed();
   const isMobile = useIsMobile();
-  
+
   const [showUsernameSetup, setShowUsernameSetup] = useState(false);
   const [viewingDrink, setViewingDrink] = useState<Drink | null>(null);
   const [viewingOwner, setViewingOwner] = useState<DrinkOwner | null>(null);
+  const [likedByActivityId, setLikedByActivityId] = useState<string | null>(null);
+
+  // Likes integration
+  const activityIds = useMemo(
+    () => activities.map((a) => a.id),
+    [activities]
+  );
+  const { getLikeInfo, toggleLike } = useLikes(activityIds);
+
+  // Discovery
+  const { circlePopular, trending, isLoading: discoveryLoading } = useDiscovery();
+  const hasFollows = activities.length > 0 || !feedLoading;
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -81,7 +97,16 @@ export default function Feed() {
       </div>
 
       {/* Content */}
-      <main className="max-w-2xl mx-auto px-4 py-3">
+      <main className="max-w-2xl mx-auto px-4 py-3 space-y-4">
+        {/* Discovery Section - shown when user has follows */}
+        {hasFollows && !hasNoFollowing && (
+          <DiscoverySection
+            circlePopular={circlePopular}
+            trending={trending}
+            isLoading={discoveryLoading}
+          />
+        )}
+
         {feedLoading && activities.length === 0 ? (
           <div className="space-y-4">
             {[1, 2, 3].map((i) => (
@@ -106,13 +131,22 @@ export default function Feed() {
           </div>
         ) : (
           <div className="space-y-2">
-            {activities.map((activity) => (
-              <ActivityCard 
-                key={activity.id} 
-                activity={activity}
-                onDrinkClick={handleDrinkClick}
-              />
-            ))}
+            {activities.map((activity) => {
+              const likeInfo = getLikeInfo(activity.id);
+              return (
+                <ActivityCard
+                  key={activity.id}
+                  activity={activity}
+                  onDrinkClick={handleDrinkClick}
+                  likeCount={likeInfo.count}
+                  isLikedByMe={likeInfo.isLikedByMe}
+                  onToggleLike={() =>
+                    toggleLike(activity.id, likeInfo.isLikedByMe)
+                  }
+                  onLikeCountClick={() => setLikedByActivityId(activity.id)}
+                />
+              );
+            })}
 
             {hasMore && (
               <div className="text-center py-4">
@@ -139,10 +173,19 @@ export default function Feed() {
         owner={viewingOwner}
       />
 
+      {/* Liked By Sheet */}
+      <LikedBySheet
+        activityId={likedByActivityId}
+        open={!!likedByActivityId}
+        onOpenChange={(open) => {
+          if (!open) setLikedByActivityId(null);
+        }}
+      />
+
       {/* Username Setup Modal */}
-      <UsernameSetup 
-        open={showUsernameSetup} 
-        onComplete={handleUsernameSetupComplete} 
+      <UsernameSetup
+        open={showUsernameSetup}
+        onComplete={handleUsernameSetupComplete}
       />
 
       {/* Spacer for bottom nav */}

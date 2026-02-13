@@ -1,4 +1,4 @@
-import { Wine, Star, Calendar, TrendingUp, Clock } from 'lucide-react';
+import { Wine, Star, Clock, Calendar } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ProfileStats } from '@/hooks/useProfileStats';
@@ -7,93 +7,90 @@ import { format } from 'date-fns';
 interface ProfileStatsCardProps {
   stats: ProfileStats | null;
   isLoading: boolean;
+  personalityLabel?: string;
 }
 
-export function ProfileStatsCard({ stats, isLoading }: ProfileStatsCardProps) {
+export function ProfileStatsCard({ stats, isLoading, personalityLabel }: ProfileStatsCardProps) {
   if (isLoading) {
     return (
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        {[1, 2, 3, 4, 5].map((i) => (
-          <Card key={i} className="bg-card/50 border-border/50">
-            <CardContent className="p-4">
-              <Skeleton className="h-4 w-16 mb-2" />
-              <Skeleton className="h-6 w-12" />
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      <Card className="bg-card/50 border-border/50">
+        <CardContent className="p-5 space-y-4">
+          <Skeleton className="h-10 w-24 mx-auto" />
+          <div className="grid grid-cols-3 gap-3">
+            {[1, 2, 3].map((i) => (
+              <Skeleton key={i} className="h-12 w-full" />
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
-  if (!stats) {
-    return null;
-  }
-
-  const statItems = [
-    {
-      label: 'Drinks Logged',
-      value: stats.totalDrinks.toString(),
-      icon: <Wine className="h-4 w-4 text-primary" />,
-    },
-    {
-      label: 'Wishlist',
-      value: stats.wishlistCount.toString(),
-      icon: <Clock className="h-4 w-4 text-amber-500" />,
-    },
-    stats.favoriteType && {
-      label: 'Favorite Type',
-      value: stats.favoriteType.icon,
-      subtext: stats.favoriteType.type.charAt(0).toUpperCase() + stats.favoriteType.type.slice(1),
-      icon: null,
-    },
-    stats.averageRating && {
-      label: 'Avg Rating',
-      value: stats.averageRating.toFixed(1),
-      icon: <Star className="h-4 w-4 text-amber-500 fill-amber-500" />,
-    },
-    stats.topRatedDrink && {
-      label: 'Top Rated',
-      value: `${stats.topRatedDrink.rating}★`,
-      subtext: stats.topRatedDrink.name,
-      icon: <TrendingUp className="h-4 w-4 text-green-500" />,
-    },
-    stats.memberSince && {
-      label: 'Member Since',
-      value: format(stats.memberSince, 'MMM yyyy'),
-      icon: <Calendar className="h-4 w-4 text-muted-foreground" />,
-    },
-  ].filter(Boolean);
+  if (!stats) return null;
 
   return (
-    <div className="space-y-3">
-      <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-        Stats
-      </h3>
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        {statItems.map((item, index) => (
-          <Card 
-            key={index} 
-            className="bg-card/50 border-border/50 hover:bg-card/80 transition-colors"
-          >
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
-                {item!.icon}
-                <span>{item!.label}</span>
-              </div>
-              <div className="flex items-baseline gap-2">
-                <span className="text-xl font-bold text-foreground">
-                  {item!.value}
-                </span>
-              </div>
-              {item!.subtext && (
-                <p className="text-xs text-muted-foreground truncate mt-0.5">
-                  {item!.subtext}
-                </p>
-              )}
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    </div>
+    <Card className="bg-card/50 border-border/50">
+      <CardContent className="p-5 space-y-4">
+        {/* Hero stat */}
+        <div className="text-center">
+          <div className="flex items-center justify-center gap-2">
+            <Wine className="h-5 w-5 text-primary" />
+            <span className="text-3xl font-bold text-foreground">{stats.totalDrinks}</span>
+          </div>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            {personalityLabel
+              ? `drinks logged · ${personalityLabel}`
+              : 'drinks logged'}
+          </p>
+        </div>
+
+        {/* Secondary stats row */}
+        <div className="grid grid-cols-3 gap-3 pt-2 border-t border-border/50">
+          {/* Avg Rating */}
+          <div className="text-center">
+            <div className="flex items-center justify-center gap-1">
+              <Star className="h-4 w-4 fill-amber-500 text-amber-500" />
+              <span className="text-lg font-semibold text-foreground">
+                {stats.averageRating ? stats.averageRating.toFixed(1) : '—'}
+              </span>
+            </div>
+            <p className="text-xs text-muted-foreground">Avg Rating</p>
+          </div>
+
+          {/* Favorite Type */}
+          <div className="text-center">
+            <div className="text-lg font-semibold text-foreground">
+              {stats.favoriteType ? stats.favoriteType.icon : '—'}
+            </div>
+            <p className="text-xs text-muted-foreground truncate">
+              {stats.favoriteType
+                ? stats.favoriteType.type.charAt(0).toUpperCase() + stats.favoriteType.type.slice(1)
+                : 'No fave'}
+            </p>
+          </div>
+
+          {/* Wishlist */}
+          <div className="text-center">
+            <div className="flex items-center justify-center gap-1">
+              <Clock className="h-4 w-4 text-amber-500" />
+              <span className="text-lg font-semibold text-foreground">
+                {stats.wishlistCount}
+              </span>
+            </div>
+            <p className="text-xs text-muted-foreground">Wishlist</p>
+          </div>
+        </div>
+
+        {/* Member since */}
+        {stats.memberSince && (
+          <div className="flex items-center justify-center gap-1.5 pt-2 border-t border-border/50">
+            <Calendar className="h-3 w-3 text-muted-foreground" />
+            <span className="text-xs text-muted-foreground">
+              Member since {format(stats.memberSince, 'MMMM yyyy')}
+            </span>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }

@@ -27,6 +27,9 @@ export interface ActivityFeedItem {
   createdAt: Date;
   // Joined data
   user?: PublicProfile;
+  // Likes data (populated after fetch)
+  likeCount?: number;
+  isLikedByMe?: boolean;
 }
 
 export interface PublicProfile {

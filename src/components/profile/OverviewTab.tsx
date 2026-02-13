@@ -1,24 +1,36 @@
 import { Lock, Wine } from 'lucide-react';
 import { ProfileStatsCard } from '@/components/ProfileStatsCard';
-import { TopDrinksShowcase } from '@/components/TopDrinksShowcase';
-import { ProfileStats, TopDrink } from '@/hooks/useProfileStats';
+import { TasteSignatureCard } from '@/components/TasteSignatureCard';
+import { CategoryTopDrinksShowcase } from '@/components/CategoryTopDrinksShowcase';
+import { ProfileStats } from '@/hooks/useProfileStats';
+import { TasteSignature, CategoryTopDrinks, TopDrinkEntry } from '@/types/taste';
+import { Collection } from '@/types/drink';
+import { ProfileCollectionsShowcase } from '@/components/ProfileCollectionsShowcase';
 
 interface OverviewTabProps {
   canViewStats: boolean;
   activityVisibility?: string;
   stats: ProfileStats | null;
-  topDrinks: TopDrink[];
+  tasteSignature: TasteSignature | null;
+  categoryTopDrinks: CategoryTopDrinks[];
   statsLoading: boolean;
-  onTopDrinkClick: (drink: TopDrink) => void;
+  onCategoryDrinkClick: (drink: TopDrinkEntry) => void;
+  publicCollections?: Collection[];
+  collectionsLoading?: boolean;
+  profileUserId?: string;
 }
 
 export function OverviewTab({
   canViewStats,
   activityVisibility,
   stats,
-  topDrinks,
+  tasteSignature,
+  categoryTopDrinks,
   statsLoading,
-  onTopDrinkClick,
+  onCategoryDrinkClick,
+  publicCollections,
+  collectionsLoading,
+  profileUserId,
 }: OverviewTabProps) {
   if (!canViewStats) {
     return (
@@ -36,12 +48,24 @@ export function OverviewTab({
 
   return (
     <>
-      <ProfileStatsCard stats={stats} isLoading={statsLoading} />
-      <TopDrinksShowcase
-        drinks={topDrinks}
+      <ProfileStatsCard
+        stats={stats}
         isLoading={statsLoading}
-        onDrinkClick={onTopDrinkClick}
+        personalityLabel={tasteSignature?.personalityLabel}
       />
+      <TasteSignatureCard signature={tasteSignature} isLoading={statsLoading} />
+      <CategoryTopDrinksShowcase
+        categories={categoryTopDrinks}
+        isLoading={statsLoading}
+        onDrinkClick={onCategoryDrinkClick}
+      />
+      {publicCollections && (
+        <ProfileCollectionsShowcase
+          collections={publicCollections}
+          isLoading={collectionsLoading ?? false}
+          userId={profileUserId}
+        />
+      )}
 
       {!statsLoading && stats?.totalDrinks === 0 && (
         <div className="text-center py-8 text-muted-foreground">

@@ -10,7 +10,8 @@ import { useSocialProfile } from '@/hooks/useSocialProfile';
 import { useFollows } from '@/hooks/useFollows';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { useProfileStats, TopDrink } from '@/hooks/useProfileStats';
+import { useProfileStats } from '@/hooks/useProfileStats';
+import { TopDrinkEntry } from '@/types/taste';
 import { queryKeys } from '@/lib/queryKeys';
 
 import { PageHeader } from '@/components/PageHeader';
@@ -57,7 +58,13 @@ export default function UserProfile() {
     return false;
   };
 
-  const { stats, topDrinks, isLoading: statsLoading, canViewStats } = useProfileStats(
+  const {
+    stats,
+    tasteSignature,
+    categoryTopDrinks,
+    isLoading: statsLoading,
+    canViewStats,
+  } = useProfileStats(
     profile?.userId,
     isOwnProfile,
     canViewActivity(),
@@ -91,7 +98,7 @@ export default function UserProfile() {
     setViewingOwner(owner);
   };
 
-  const handleTopDrinkClick = async (topDrink: TopDrink) => {
+  const handleCategoryDrinkClick = async (topDrink: TopDrinkEntry) => {
     const drink = await drinkService.fetchPublicDrinkById(topDrink.id);
     if (drink) {
       setViewingDrink(drink);
@@ -205,9 +212,10 @@ export default function UserProfile() {
               canViewStats={canViewStats}
               activityVisibility={profile.activityVisibility}
               stats={stats}
-              topDrinks={topDrinks}
+              tasteSignature={tasteSignature}
+              categoryTopDrinks={categoryTopDrinks}
               statsLoading={statsLoading}
-              onTopDrinkClick={handleTopDrinkClick}
+              onCategoryDrinkClick={handleCategoryDrinkClick}
             />
           </TabsContent>
 
