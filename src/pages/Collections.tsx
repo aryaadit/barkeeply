@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useCollections } from '@/hooks/useCollections';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { CollectionCard } from '@/components/CollectionCard';
+import { PullToRefresh } from '@/components/PullToRefresh';
 import { CreateCollectionDialog } from '@/components/CreateCollectionDialog';
 
 import { PageHeader } from '@/components/PageHeader';
@@ -14,7 +15,7 @@ import { toast } from 'sonner';
 const Collections = () => {
   const navigate = useNavigate();
   const { user, isLoading: authLoading } = useAuth();
-  const { collections, isLoading, createCollection } = useCollections();
+  const { collections, isLoading, createCollection, refetch } = useCollections();
   const isMobile = useIsMobile();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
@@ -64,10 +65,23 @@ const Collections = () => {
       />
 
       {/* Main Content */}
+      <PullToRefresh onRefresh={refetch}>
       <main className="container mx-auto px-4 py-6">
         {isLoading || authLoading ? (
-          <div className="flex items-center justify-center py-16">
-            <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl mx-auto">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="p-4 rounded-xl bg-card/50 border border-border/50 animate-fade-in" style={{ animationDelay: `${i * 50}ms` }}>
+                <div className="h-1 -mt-4 -mx-4 mb-3 rounded-t-xl shimmer" />
+                <div className="flex items-start gap-3">
+                  <div className="w-12 h-12 rounded-lg shimmer flex-shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-5 w-3/4 rounded shimmer" />
+                    <div className="h-3 w-full rounded shimmer" />
+                    <div className="h-3 w-16 rounded shimmer" />
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         ) : collections.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 space-y-4">
@@ -97,6 +111,7 @@ const Collections = () => {
           </div>
         )}
       </main>
+      </PullToRefresh>
 
       {/* Create Collection Dialog */}
       <CreateCollectionDialog

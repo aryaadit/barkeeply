@@ -23,6 +23,7 @@ const WelcomeCarousel = lazy(() =>
 import { HomeHeader } from '@/components/home/HomeHeader';
 import { OnboardingSection } from '@/components/home/OnboardingSection';
 import { SearchAndFilterBar } from '@/components/home/SearchAndFilterBar';
+import { PullToRefresh } from '@/components/PullToRefresh';
 import { useWindowVirtualizer } from '@tanstack/react-virtual';
 import { toast } from 'sonner';
 
@@ -34,7 +35,7 @@ const Index = () => {
   const isMobile = useIsMobile();
   const appInfo = useAppInfo();
   const { isStepVisible, dismissStep, showWelcomeCarousel, completeWelcome } = useOnboarding();
-  const { drinks, isLoading, addDrink, updateDrink, deleteDrink, filterDrinks, getDrinkCountByType, migrateDrinksToOther } = useDrinks();
+  const { drinks, isLoading, addDrink, updateDrink, deleteDrink, filterDrinks, getDrinkCountByType, migrateDrinksToOther, refetch } = useDrinks();
   const { customTypes } = useCustomDrinkTypes();
   const [selectedType, setSelectedType] = useState<DrinkType | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -261,6 +262,7 @@ const Index = () => {
         onSignOut={handleSignOut}
       />
 
+      <PullToRefresh onRefresh={refetch}>
       <main className="container mx-auto px-4 py-6">
         <OnboardingSection
           isStepVisible={isStepVisible}
@@ -285,7 +287,7 @@ const Index = () => {
           <div className="flex items-center gap-2 mb-4 text-sm text-muted-foreground">
             <span>Showing {filteredDrinks.length} of {totalDrinks}</span>
             {hasFilters && (
-              <button onClick={handleClearFilters} className="text-primary hover:underline text-xs">
+              <button onClick={handleClearFilters} className="text-primary hover:underline text-xs min-h-[44px] min-w-[44px] px-2 inline-flex items-center justify-center active:opacity-70">
                 Clear
               </button>
             )}
@@ -330,6 +332,7 @@ const Index = () => {
           />
         )}
       </main>
+      </PullToRefresh>
 
       {isMobile && <div className="h-20" />}
 

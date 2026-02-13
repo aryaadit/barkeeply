@@ -40,16 +40,20 @@ export const DebouncedSearchBar = forwardRef<HTMLInputElement, DebouncedSearchBa
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
           ref={ref}
+          type="search"
           value={localValue}
           onChange={(e) => setLocalValue(e.target.value)}
           placeholder={placeholder}
+          enterKeyHint="search"
+          autoCorrect="off"
+          autoCapitalize="off"
           className="pl-10 pr-10 bg-secondary/50 border-border focus:border-primary/50"
         />
         {localValue && (
           <Button
             variant="ghost"
             size="icon"
-            className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
+            className="absolute right-1 top-1/2 -translate-y-1/2 h-9 w-9"
             onClick={handleClear}
           >
             <X className="h-4 w-4" />

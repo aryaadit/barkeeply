@@ -1,14 +1,15 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useCollections } from '@/hooks/useCollections';
 import { DrinkListItem } from '@/components/MemoizedDrinkListItem';
 import { DrinkDetailModal } from '@/components/DrinkDetailModal';
 import { Button } from '@/components/ui/button';
-import { Globe, Loader2, Wine, ExternalLink } from 'lucide-react';
+import { ArrowLeft, Globe, Loader2, Wine, ExternalLink } from 'lucide-react';
 import { Drink, Collection } from '@/types/drink';
 
 const SharedCollection = () => {
   const { shareId } = useParams<{ shareId: string }>();
+  const navigate = useNavigate();
   const { getPublicCollection } = useCollections();
 
   const [collection, setCollection] = useState<Collection | null>(null);
@@ -73,6 +74,9 @@ const SharedCollection = () => {
 
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center gap-3">
+            <Button variant="ghost" size="icon" onClick={() => navigate('/')} className="flex-shrink-0">
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
             <div
               className="w-12 h-12 rounded-lg flex items-center justify-center text-2xl flex-shrink-0"
               style={{ backgroundColor: `${collection.coverColor}20` }}

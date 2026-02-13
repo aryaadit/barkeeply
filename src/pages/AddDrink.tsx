@@ -30,7 +30,7 @@ import { useHaptics } from '@/hooks/useHaptics';
 import { useDrinks } from '@/hooks/useDrinks';
 import * as drinkService from '@/services/drinkService';
 import { useCustomDrinkTypes } from '@/hooks/useCustomDrinkTypes';
-import { Camera, X, Loader2, ImagePlus, Search, Sparkles, ChevronDown, ChevronLeft } from 'lucide-react';
+import { Camera, X, Loader2, ImagePlus, Search, Sparkles, ChevronDown, ArrowLeft } from 'lucide-react';
 import { takePhoto, pickFromGallery, dataUrlToBlob } from '@/hooks/useCamera';
 import { Capacitor } from '@capacitor/core';
 import { toast } from 'sonner';
@@ -164,6 +164,7 @@ export default function AddDrink() {
       setImageUrl(storagePath);
     } catch (error) {
       console.error('Error uploading image:', error);
+      toast.error('Failed to upload image');
     } finally {
       setIsUploading(false);
     }
@@ -261,10 +262,16 @@ export default function AddDrink() {
     navigate(-1);
   };
 
+  const scrollInputIntoView = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setTimeout(() => {
+      e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 300);
+  };
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <header className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border safe-area-inset-top">
+      <header className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border pt-[env(safe-area-inset-top)]">
         <div className="flex items-center justify-between px-4 h-14">
           <Button
             variant="ghost"
@@ -272,7 +279,7 @@ export default function AddDrink() {
             onClick={handleBack}
             className="min-w-[44px] min-h-[44px]"
           >
-            <ChevronLeft className="w-6 h-6" />
+            <ArrowLeft className="w-5 h-5" />
           </Button>
           <h1 className="text-lg font-semibold">
             {editId ? 'Edit Drink' : 'Add Drink'}
@@ -357,6 +364,8 @@ export default function AddDrink() {
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g., Lagavulin 16"
                 required
+                autoCapitalize="words"
+                enterKeyHint="next"
                 className="bg-secondary/50 flex-1 h-12 text-base"
               />
               <Button
@@ -473,6 +482,9 @@ export default function AddDrink() {
                   value={brand}
                   onChange={(e) => setBrand(e.target.value)}
                   placeholder="e.g., Lagavulin, The Alchemist"
+                  autoCapitalize="words"
+                  enterKeyHint="next"
+                  onFocus={scrollInputIntoView}
                   className="bg-secondary/50 h-12 text-base"
                 />
               </div>
@@ -485,6 +497,8 @@ export default function AddDrink() {
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder="What did you like about it? Flavor profile, aromas..."
                   rows={3}
+                  autoCapitalize="sentences"
+                  onFocus={scrollInputIntoView}
                   className="bg-secondary/50 resize-none text-base"
                 />
               </div>
@@ -496,6 +510,9 @@ export default function AddDrink() {
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
                   placeholder="Where did you have it?"
+                  autoCapitalize="words"
+                  enterKeyHint="next"
+                  onFocus={scrollInputIntoView}
                   className="bg-secondary/50 h-12 text-base"
                 />
               </div>
@@ -507,6 +524,8 @@ export default function AddDrink() {
                   value={price}
                   onChange={(e) => setPrice(e.target.value)}
                   placeholder="e.g., $45, $$"
+                  enterKeyHint="done"
+                  onFocus={scrollInputIntoView}
                   className="bg-secondary/50 h-12 text-base"
                 />
               </div>
@@ -515,7 +534,7 @@ export default function AddDrink() {
         </div>
 
         {/* Sticky Footer */}
-        <div className="sticky bottom-0 bg-background border-t border-border p-4 safe-area-inset-bottom">
+        <div className="sticky bottom-0 bg-background border-t border-border p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
           <div className="flex gap-3">
             <Button
               type="button"

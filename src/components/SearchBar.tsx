@@ -16,16 +16,20 @@ export const SearchBar = forwardRef<HTMLInputElement, SearchBarProps>(
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
           ref={ref}
+          type="search"
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
+          enterKeyHint="search"
+          autoCorrect="off"
+          autoCapitalize="off"
           className="pl-10 pr-10 bg-secondary/50 border-border focus:border-primary/50"
         />
         {value && (
           <Button
             variant="ghost"
             size="icon"
-            className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
+            className="absolute right-1 top-1/2 -translate-y-1/2 h-9 w-9"
             onClick={() => onChange('')}
           >
             <X className="h-4 w-4" />

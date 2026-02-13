@@ -188,5 +188,9 @@ export function useDrinks() {
     filterDrinks,
     getDrinkCountByType,
     migrateDrinksToOther,
+    refetch: () =>
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.drinks.list(user?.id ?? ''),
+      }),
   };
 }

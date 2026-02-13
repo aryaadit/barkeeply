@@ -104,6 +104,10 @@ export function UsernameSetup({ open, onComplete }: UsernameSetupProps) {
                 placeholder="drinkexplorer"
                 value={username}
                 onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
+                autoCapitalize="off"
+                autoCorrect="off"
+                spellCheck={false}
+                enterKeyHint="next"
                 className={cn(
                   "pl-10 pr-10",
                   isAvailable === true && "border-green-500 focus-visible:ring-green-500",
@@ -140,6 +144,8 @@ export function UsernameSetup({ open, onComplete }: UsernameSetupProps) {
               onChange={(e) => setBio(e.target.value)}
               rows={3}
               maxLength={160}
+              autoCapitalize="sentences"
+              enterKeyHint="done"
             />
             <p className="text-xs text-muted-foreground text-right">
               {bio.length}/160

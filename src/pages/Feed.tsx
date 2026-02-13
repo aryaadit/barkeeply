@@ -8,6 +8,7 @@ import { useDiscovery } from '@/hooks/useDiscovery';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 import { PageHeader } from '@/components/PageHeader';
+import { PullToRefresh } from '@/components/PullToRefresh';
 import { ActivityCard } from '@/components/ActivityCard';
 import { UserSearch } from '@/components/UserSearch';
 import { UsernameSetup } from '@/components/UsernameSetup';
@@ -22,7 +23,7 @@ export default function Feed() {
   const navigate = useNavigate();
   const { user, isLoading: authLoading } = useAuth();
   const { profile, isLoading: profileLoading, refetch: refetchProfile } = useProfile();
-  const { activities, isLoading: feedLoading, hasMore, loadMore } = useActivityFeed();
+  const { activities, isLoading: feedLoading, hasMore, loadMore, refetch: refetchFeed } = useActivityFeed();
   const isMobile = useIsMobile();
 
   const [showUsernameSetup, setShowUsernameSetup] = useState(false);
@@ -87,6 +88,7 @@ export default function Feed() {
       </div>
 
       {/* Content */}
+      <PullToRefresh onRefresh={async () => { await refetchFeed(); }}>
       <main className="max-w-2xl mx-auto px-4 py-3 space-y-4">
         {/* Discovery Section - shown when user has follows */}
         {hasFollows && !hasNoFollowing && (
@@ -139,6 +141,7 @@ export default function Feed() {
           </div>
         )}
       </main>
+      </PullToRefresh>
 
       {/* Drink Detail Modal - Read-only for feed items */}
       <DrinkDetailModal

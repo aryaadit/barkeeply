@@ -180,6 +180,10 @@ const Auth = () => {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       className="pl-10"
+                      autoComplete="email"
+                      autoCorrect="off"
+                      autoCapitalize="off"
+                      enterKeyHint={mode === 'forgot' ? 'go' : 'next'}
                     />
                   </div>
                   {errors.email && (
@@ -199,6 +203,8 @@ const Auth = () => {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         className="pl-10 pr-10"
+                        autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
+                        enterKeyHint="go"
                       />
                       <button
                         type="button"

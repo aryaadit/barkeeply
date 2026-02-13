@@ -8,6 +8,7 @@ import { DrinkListItem } from '@/components/MemoizedDrinkListItem';
 import { DrinkDetailModal } from '@/components/DrinkDetailModal';
 import { CreateCollectionDialog } from '@/components/CreateCollectionDialog';
 import { StorageImage } from '@/components/StorageImage';
+import { PullToRefresh } from '@/components/PullToRefresh';
 
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -177,10 +178,40 @@ const CollectionDetail = () => {
     toast.success('Collection updated');
   };
 
+  const handleRefresh = async () => {
+    refetch();
+    if (id) await loadDrinks(id);
+  };
+
   if (!collection || authLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+      <div className="min-h-screen bg-background">
+        <header className="sticky top-0 z-50 glass border-b border-border/50 pt-[env(safe-area-inset-top)]">
+          <div className="h-1 shimmer" />
+          <div className="container mx-auto px-4 py-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg shimmer" />
+              <div className="w-10 h-10 rounded-lg shimmer" />
+              <div className="flex-1 space-y-2">
+                <div className="h-5 w-48 rounded shimmer" />
+                <div className="h-3 w-20 rounded shimmer" />
+              </div>
+            </div>
+          </div>
+        </header>
+        <main className="container mx-auto px-4 py-6">
+          <div className="flex flex-col gap-3 max-w-2xl mx-auto">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="w-full flex items-center gap-4 p-4 rounded-xl bg-card/50 border border-border/50 animate-fade-in" style={{ animationDelay: `${i * 50}ms` }}>
+                <div className="w-12 h-12 rounded-lg shimmer flex-shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-5 w-3/4 rounded shimmer" />
+                  <div className="h-4 w-1/2 rounded shimmer" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </main>
       </div>
     );
   }
@@ -272,10 +303,19 @@ const CollectionDetail = () => {
       </header>
 
       {/* Main Content */}
+      <PullToRefresh onRefresh={handleRefresh}>
       <main className="container mx-auto px-4 py-6">
         {isLoading ? (
-          <div className="flex items-center justify-center py-16">
-            <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+          <div className="flex flex-col gap-3 max-w-2xl mx-auto">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="w-full flex items-center gap-4 p-4 rounded-xl bg-card/50 border border-border/50 animate-fade-in" style={{ animationDelay: `${i * 50}ms` }}>
+                <div className="w-12 h-12 rounded-lg shimmer flex-shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-5 w-3/4 rounded shimmer" />
+                  <div className="h-4 w-1/2 rounded shimmer" />
+                </div>
+              </div>
+            ))}
           </div>
         ) : collectionDrinks.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 space-y-4">
@@ -314,6 +354,7 @@ const CollectionDetail = () => {
           </>
         )}
       </main>
+      </PullToRefresh>
 
       {/* Detail Modal */}
       <DrinkDetailModal

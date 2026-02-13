@@ -79,11 +79,11 @@ export function ProfileHeader({
               </div>
             )}
 
-            <button className="text-sm hover:underline" onClick={onFollowersClick}>
+            <button className="text-sm hover:underline min-h-[44px] px-1 inline-flex items-center active:opacity-70" onClick={onFollowersClick}>
               <span className="font-semibold">{followCounts.followers}</span>{' '}
               <span className="text-muted-foreground">followers</span>
             </button>
-            <button className="text-sm hover:underline" onClick={onFollowingClick}>
+            <button className="text-sm hover:underline min-h-[44px] px-1 inline-flex items-center active:opacity-70" onClick={onFollowingClick}>
               <span className="font-semibold">{followCounts.following}</span>{' '}
               <span className="text-muted-foreground">following</span>
             </button>

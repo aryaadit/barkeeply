@@ -72,7 +72,7 @@ export function QuickFilters({
         size="sm"
         onClick={() => handleSelect(null)}
         className={cn(
-          'shrink-0 h-8 px-3 text-xs font-medium rounded-full transition-all duration-200',
+          'shrink-0 min-h-[44px] px-3 text-xs font-medium rounded-full transition-all duration-200',
           selectedType === null && 'shadow-glow'
         )}
       >
@@ -92,7 +92,7 @@ export function QuickFilters({
             size="sm"
             onClick={() => handleSelect(type)}
             className={cn(
-              'shrink-0 h-8 px-3 text-xs font-medium rounded-full transition-all duration-200',
+              'shrink-0 min-h-[44px] px-3 text-xs font-medium rounded-full transition-all duration-200',
               isSelected && 'shadow-glow',
               !isSelected && 'bg-muted/50 border-border/50 hover:bg-muted hover:border-border'
             )}

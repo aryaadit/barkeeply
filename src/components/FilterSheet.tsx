@@ -186,7 +186,7 @@ export function FilterSheet({
             size="sm"
             onClick={() => handleSelect(null)}
             className={cn(
-              'transition-all duration-200',
+              'transition-all duration-200 min-h-[44px]',
               selectedType === null && 'shadow-glow'
             )}
           >
@@ -205,7 +205,7 @@ export function FilterSheet({
                 size="sm"
                 onClick={() => handleSelect(type)}
                 className={cn(
-                  'transition-all duration-200',
+                  'transition-all duration-200 min-h-[44px]',
                   selectedType === type && 'shadow-glow'
                 )}
               >
@@ -227,7 +227,7 @@ export function FilterSheet({
                     size="sm"
                     onClick={() => handleSelect(customType.name)}
                     className={cn(
-                      'transition-all duration-200',
+                      'transition-all duration-200 min-h-[44px]',
                       selectedType === customType.name && 'shadow-glow'
                     )}
                     style={selectedType !== customType.name ? {
@@ -266,7 +266,7 @@ export function FilterSheet({
             variant="outline"
             size="sm"
             onClick={handleAddClick}
-            className="transition-all duration-200 border-dashed"
+            className="transition-all duration-200 border-dashed min-h-[44px]"
           >
             <Plus className="w-4 h-4" />
             <span>Add</span>
@@ -285,7 +285,7 @@ export function FilterSheet({
               size="sm"
               onClick={() => handleSortSelect(option)}
               className={cn(
-                'justify-start transition-all duration-200',
+                'justify-start transition-all duration-200 min-h-[44px]',
                 sortOrder === option && 'shadow-glow'
               )}
             >

@@ -246,6 +246,8 @@ const Settings = () => {
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
                     placeholder="Enter your name"
+                    autoCapitalize="words"
+                    enterKeyHint="next"
                     className="mt-1"
                   />
                 </div>
@@ -265,6 +267,10 @@ const Settings = () => {
                     value={username}
                     onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
                     placeholder="your_username"
+                    autoCapitalize="off"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    enterKeyHint="done"
                     className={`pl-7 pr-10 ${usernameError ? 'border-destructive' : username && !isCheckingUsername && !usernameError ? 'border-green-500' : ''}`}
                     maxLength={20}
                   />
@@ -459,6 +465,8 @@ const Settings = () => {
             Privacy Policy
           </Button>
         </div>
+
+        {isMobile && <div className="h-20" />}
       </main>
     </div>
   );
