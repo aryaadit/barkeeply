@@ -97,7 +97,7 @@ export function useCollections() {
   const addDrinkMutation = useMutation({
     mutationFn: ({ collectionId, drinkId }: { collectionId: string; drinkId: string }) =>
       collectionService.addDrinkToCollection(collectionId, drinkId),
-    onSuccess: (added, { collectionId }) => {
+    onSuccess: (added, { collectionId, drinkId }) => {
       if (added) {
         queryClient.setQueryData<Collection[]>(
           queryKeys.collections.list(user!.id),
@@ -108,6 +108,7 @@ export function useCollections() {
                 : c
             )
         );
+        queryClient.invalidateQueries({ queryKey: queryKeys.collections.forDrink(drinkId) });
         trackEvent('drink_added_to_collection', 'action', { collectionId });
       }
     },
@@ -116,7 +117,7 @@ export function useCollections() {
   const removeDrinkMutation = useMutation({
     mutationFn: ({ collectionId, drinkId }: { collectionId: string; drinkId: string }) =>
       collectionService.removeDrinkFromCollection(collectionId, drinkId),
-    onSuccess: (_, { collectionId }) => {
+    onSuccess: (_, { collectionId, drinkId }) => {
       queryClient.setQueryData<Collection[]>(
         queryKeys.collections.list(user!.id),
         (old = []) =>
@@ -126,6 +127,7 @@ export function useCollections() {
               : c
           )
       );
+      queryClient.invalidateQueries({ queryKey: queryKeys.collections.forDrink(drinkId) });
       trackEvent('drink_removed_from_collection', 'action', { collectionId });
     },
   });

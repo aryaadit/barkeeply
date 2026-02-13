@@ -42,6 +42,10 @@ export function useProfile() {
       );
       return { previous };
     },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.profile.byUserId(user!.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.feed.all });
+    },
     onError: (_, __, context) => {
       if (context?.previous !== undefined) {
         queryClient.setQueryData(

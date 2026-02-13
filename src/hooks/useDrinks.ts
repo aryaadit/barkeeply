@@ -25,6 +25,9 @@ export function useDrinks() {
         queryKeys.drinks.list(user!.id),
         (old = []) => [newDrink, ...old]
       );
+      queryClient.invalidateQueries({ queryKey: queryKeys.collections.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.profileStats.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.feed.all });
       trackEvent('drink_added', 'action', {
         drink_type: drink.type,
         has_image: !!drink.imageUrl,
@@ -57,6 +60,9 @@ export function useDrinks() {
       trackEvent('drink_update_error', 'error', { error: error.message });
     },
     onSuccess: (_, { updates }) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.collections.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.profileStats.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.feed.all });
       trackEvent('drink_edited', 'action', {
         drink_type: updates.type,
         fields_changed: Object.keys(updates).filter((k) => k !== 'id'),
@@ -83,6 +89,9 @@ export function useDrinks() {
       trackEvent('drink_delete_error', 'error', { error: error.message });
     },
     onSuccess: (_, __, context) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.collections.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.profileStats.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.feed.all });
       trackEvent('drink_deleted', 'action', {
         drink_type: context?.drinkToDelete?.type,
       });
@@ -107,6 +116,9 @@ export function useDrinks() {
       if (context?.previous) {
         queryClient.setQueryData(queryKeys.drinks.list(user!.id), context.previous);
       }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.profileStats.all });
     },
   });
 
