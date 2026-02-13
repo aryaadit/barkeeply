@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Share2 } from 'lucide-react';
-import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -113,36 +111,6 @@ export default function UserProfile() {
     }
   };
 
-  const handleShare = async () => {
-    const profileUrl = `${window.location.origin}/u/${profile?.username}`;
-    const shareData = {
-      title: `${profile?.displayName || profile?.username}'s Profile`,
-      text: `Check out ${profile?.displayName || profile?.username} on Barkeeply`,
-      url: profileUrl,
-    };
-
-    if (navigator.share && navigator.canShare?.(shareData)) {
-      try {
-        await navigator.share(shareData);
-      } catch (error) {
-        if ((error as Error).name !== 'AbortError') {
-          copyToClipboard(profileUrl);
-        }
-      }
-    } else {
-      copyToClipboard(profileUrl);
-    }
-  };
-
-  const copyToClipboard = async (url: string) => {
-    try {
-      await navigator.clipboard.writeText(url);
-      toast.success('Profile link copied to clipboard');
-    } catch {
-      toast.error('Failed to copy link');
-    }
-  };
-
   if (profileLoading) {
     return (
       <div className="min-h-screen bg-background">
@@ -179,11 +147,6 @@ export default function UserProfile() {
       <PageHeader
         title={`@${profile.username}`}
         showBack={true}
-        rightContent={
-          <Button variant="ghost" size="icon" onClick={handleShare}>
-            <Share2 className="h-5 w-5" />
-          </Button>
-        }
       />
 
       <ProfileHeader
