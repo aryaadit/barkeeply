@@ -25,6 +25,7 @@ import { PublicProfile, ActivityFeedItem } from '@/types/social';
 import { Drink } from '@/types/drink';
 import * as feedService from '@/services/feedService';
 import * as drinkService from '@/services/drinkService';
+import { fetchPublicCollections } from '@/services/collectionService';
 
 export default function UserProfile() {
   const { username } = useParams<{ username: string }>();
@@ -78,6 +79,12 @@ export default function UserProfile() {
       return items.map((item) => ({ ...item, user: profile! }));
     },
     enabled: !!profile?.userId && canViewActivity(),
+  });
+
+  const { data: publicCollections, isLoading: collectionsLoading } = useQuery({
+    queryKey: queryKeys.collections.publicForUser(profile?.userId ?? ''),
+    queryFn: () => fetchPublicCollections(profile!.userId),
+    enabled: !!profile?.userId,
   });
 
   useEffect(() => {
@@ -216,6 +223,10 @@ export default function UserProfile() {
               categoryTopDrinks={categoryTopDrinks}
               statsLoading={statsLoading}
               onCategoryDrinkClick={handleCategoryDrinkClick}
+              publicCollections={publicCollections}
+              collectionsLoading={collectionsLoading}
+              profileUserId={profile.userId}
+              isOwnProfile={isOwnProfile}
             />
           </TabsContent>
 

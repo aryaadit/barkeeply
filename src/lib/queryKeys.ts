@@ -12,7 +12,7 @@ export const queryKeys = {
     drinks: (collectionId: string) => ['collections', 'drinks', collectionId] as const,
     public: (shareId: string) => ['collections', 'public', shareId] as const,
     forDrink: (drinkId: string) => ['collections', 'forDrink', drinkId] as const,
-    publicByUser: (userId: string) => ['collections', 'publicByUser', userId] as const,
+    publicForUser: (userId: string) => ['collections', 'publicForUser', userId] as const,
   },
   customDrinkTypes: {
     all: ['customDrinkTypes'] as const,

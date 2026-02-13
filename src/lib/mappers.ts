@@ -41,7 +41,6 @@ export function mapCollectionRow(c: any): Collection {
     coverColor: c.cover_color || '#8B5CF6',
     shareId: c.share_id || '',
     isPublic: c.is_public || false,
-    isSystem: c.is_system || false,
     createdAt: new Date(c.created_at),
     updatedAt: new Date(c.updated_at),
     drinkCount: c.collection_drinks?.[0]?.count || 0,

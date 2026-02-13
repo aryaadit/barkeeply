@@ -44,7 +44,6 @@ export async function createCollection(
     coverColor: data.cover_color,
     shareId: data.share_id,
     isPublic: data.is_public,
-    isSystem: data.is_system || false,
     createdAt: new Date(data.created_at),
     updatedAt: new Date(data.updated_at),
     drinkCount: 0,
@@ -170,7 +169,6 @@ export async function getPublicCollection(
     coverColor: collectionData.cover_color,
     shareId: collectionData.share_id,
     isPublic: collectionData.is_public,
-    isSystem: false,
     createdAt: new Date(collectionData.created_at),
     updatedAt: new Date(collectionData.updated_at),
     drinkCount: orderedDrinks.length,
@@ -200,17 +198,5 @@ export async function fetchPublicCollections(userId: string): Promise<Collection
     .order('created_at', { ascending: false });
 
   if (error) throw error;
-  return (data || []).map((c: any) => ({
-    id: c.id,
-    name: c.name,
-    description: c.description || undefined,
-    icon: c.icon || '📚',
-    coverColor: c.cover_color || '#8B5CF6',
-    shareId: c.share_id || '',
-    isPublic: c.is_public || false,
-    isSystem: c.is_system || false,
-    createdAt: new Date(c.created_at),
-    updatedAt: new Date(c.updated_at),
-    drinkCount: (c.collection_drinks as { count: number }[])?.[0]?.count || 0,
-  }));
+  return (data || []).map(mapCollectionRow);
 }

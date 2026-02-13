@@ -18,13 +18,10 @@ const Collections = () => {
   const isMobile = useIsMobile();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
-  // Sort collections: system first, then by created date
   const sortedCollections = useMemo(() => {
-    return [...collections].sort((a, b) => {
-      if (a.isSystem && !b.isSystem) return -1;
-      if (!a.isSystem && b.isSystem) return 1;
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-    });
+    return [...collections].sort((a, b) =>
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
   }, [collections]);
 
   // Redirect to auth if not logged in

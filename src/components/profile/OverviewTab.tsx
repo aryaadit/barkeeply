@@ -18,6 +18,7 @@ interface OverviewTabProps {
   publicCollections?: Collection[];
   collectionsLoading?: boolean;
   profileUserId?: string;
+  isOwnProfile?: boolean;
 }
 
 export function OverviewTab({
@@ -31,6 +32,7 @@ export function OverviewTab({
   publicCollections,
   collectionsLoading,
   profileUserId,
+  isOwnProfile,
 }: OverviewTabProps) {
   if (!canViewStats) {
     return (
@@ -64,6 +66,7 @@ export function OverviewTab({
           collections={publicCollections}
           isLoading={collectionsLoading ?? false}
           userId={profileUserId}
+          isOwnProfile={isOwnProfile}
         />
       )}
 

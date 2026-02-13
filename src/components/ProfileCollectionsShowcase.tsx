@@ -1,4 +1,4 @@
-import { FolderOpen, Star, Wine, ChevronRight } from 'lucide-react';
+import { Star, Wine, ChevronRight } from 'lucide-react';
 import { StorageImage } from '@/components/StorageImage';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
@@ -21,9 +21,10 @@ interface ProfileCollectionsShowcaseProps {
   collections: Collection[];
   isLoading: boolean;
   userId?: string;
+  isOwnProfile?: boolean;
 }
 
-export function ProfileCollectionsShowcase({ collections, isLoading, userId }: ProfileCollectionsShowcaseProps) {
+export function ProfileCollectionsShowcase({ collections, isLoading, userId, isOwnProfile }: ProfileCollectionsShowcaseProps) {
   const navigate = useNavigate();
   const [collectionsWithPreviews, setCollectionsWithPreviews] = useState<CollectionWithPreview[]>([]);
   const [previewsLoading, setPreviewsLoading] = useState(false);
@@ -105,15 +106,7 @@ export function ProfileCollectionsShowcase({ collections, isLoading, userId }: P
   }
 
   if (collections.length === 0) {
-    return (
-      <div className="text-center py-12">
-        <FolderOpen className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-        <h3 className="font-semibold mb-2">No public collections</h3>
-        <p className="text-muted-foreground text-sm">
-          This user hasn't shared any curated drink groups yet
-        </p>
-      </div>
-    );
+    return null;
   }
 
   return (
@@ -124,16 +117,16 @@ export function ProfileCollectionsShowcase({ collections, isLoading, userId }: P
           onClick={() => navigate(`/c/${collection.shareId}`)}
           className="w-full text-left group"
         >
-          <div 
+          <div
             className="relative rounded-xl overflow-hidden p-4 transition-all duration-200 hover:scale-[1.01] active:scale-[0.99]"
-            style={{ 
+            style={{
               background: `linear-gradient(135deg, ${collection.coverColor}15, ${collection.coverColor}08)`,
               borderLeft: `3px solid ${collection.coverColor}`,
             }}
           >
             <div className="flex items-start gap-4">
               {/* Icon */}
-              <div 
+              <div
                 className="w-12 h-12 rounded-lg flex items-center justify-center text-2xl shrink-0"
                 style={{ backgroundColor: `${collection.coverColor}20` }}
               >
@@ -148,7 +141,7 @@ export function ProfileCollectionsShowcase({ collections, isLoading, userId }: P
                   </h3>
                   <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
                 </div>
-                
+
                 {collection.description && (
                   <p className="text-sm text-muted-foreground line-clamp-1 mt-0.5">
                     {collection.description}
@@ -201,6 +194,14 @@ export function ProfileCollectionsShowcase({ collections, isLoading, userId }: P
           </div>
         </button>
       ))}
+      {isOwnProfile && (
+        <button
+          onClick={() => navigate('/collections')}
+          className="w-full text-center text-sm text-primary hover:text-primary/80 transition-colors py-2"
+        >
+          Manage Collections
+        </button>
+      )}
     </div>
   );
 }
