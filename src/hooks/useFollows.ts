@@ -52,6 +52,9 @@ export function useFollows(targetUserId?: string) {
             : { followers: 1, following: 0 }
       );
     },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.feed.all });
+    },
     onError: (_, userIdToFollow) => {
       queryClient.setQueryData(
         queryKeys.follows.status(user!.id, userIdToFollow),
@@ -78,6 +81,9 @@ export function useFollows(targetUserId?: string) {
             ? { ...old, followers: Math.max(0, old.followers - 1) }
             : { followers: 0, following: 0 }
       );
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.feed.all });
     },
     onError: (_, userIdToUnfollow) => {
       queryClient.setQueryData(

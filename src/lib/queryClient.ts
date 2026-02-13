@@ -42,8 +42,22 @@ export const queryClient = new QueryClient({
   },
 });
 
+// Track the current user for cache scoping
+let _cacheUserId: string | null = null;
+
+export function setCacheUserId(userId: string | null) {
+  _cacheUserId = userId;
+}
+
+// Clear both in-memory and persisted cache (call on logout)
+export function clearQueryCache() {
+  queryClient.clear();
+  localStorage.removeItem(CACHE_KEY);
+}
+
 // Simple cache persistence utilities
 export function saveQueryCache() {
+  if (!_cacheUserId) return; // Don't persist cache without an authenticated user
   try {
     const cache = queryClient.getQueryCache().getAll();
     const serializable = cache
@@ -58,6 +72,7 @@ export function saveQueryCache() {
       CACHE_KEY,
       JSON.stringify({
         version: CACHE_VERSION,
+        userId: _cacheUserId,
         timestamp: Date.now(),
         queries: serializable,
       })
@@ -67,16 +82,25 @@ export function saveQueryCache() {
   }
 }
 
-export function restoreQueryCache() {
+export function restoreQueryCache(userId: string) {
   try {
     const cached = localStorage.getItem(CACHE_KEY);
     if (!cached) return;
 
-    const { version, timestamp, queries } = JSON.parse(cached, dateReviver);
+    const { version, userId: cachedUserId, timestamp, queries } = JSON.parse(
+      cached,
+      dateReviver
+    );
 
     // Check version and age (24 hours max)
     if (version !== CACHE_VERSION) return;
     if (Date.now() - timestamp > 1000 * 60 * 60 * 24) {
+      localStorage.removeItem(CACHE_KEY);
+      return;
+    }
+
+    // Reject cache if it belongs to a different user
+    if (cachedUserId && cachedUserId !== userId) {
       localStorage.removeItem(CACHE_KEY);
       return;
     }
@@ -108,8 +132,6 @@ export function restoreQueryCache() {
 let saveTimeout: NodeJS.Timeout | null = null;
 
 export function setupCachePersistence() {
-  // Restore cache on startup
-  restoreQueryCache();
 
   // Save cache when page is hidden (user switches apps)
   document.addEventListener("visibilitychange", () => {

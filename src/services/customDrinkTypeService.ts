@@ -5,6 +5,7 @@ export async function fetchCustomDrinkTypes(userId: string): Promise<CustomDrink
   const { data, error } = await supabase
     .from('custom_drink_types')
     .select('*')
+    .eq('user_id', userId)
     .order('created_at', { ascending: true });
 
   if (error) throw error;

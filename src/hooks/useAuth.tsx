@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { queryClient, clearQueryCache, setCacheUserId, restoreQueryCache } from '@/lib/queryClient';
 
 interface AuthContextType {
   user: User | null;
@@ -27,6 +28,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(session);
         setUser(session?.user ?? null);
         setIsLoading(false);
+        setCacheUserId(session?.user?.id ?? null);
       }
     );
 
@@ -35,6 +37,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(session);
       setUser(session?.user ?? null);
       setIsLoading(false);
+
+      // Restore persisted cache only if it belongs to the current user
+      const userId = session?.user?.id;
+      setCacheUserId(userId ?? null);
+      if (userId) {
+        restoreQueryCache(userId);
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -62,13 +71,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
+    // Clear React Query cache to prevent cross-user data leaks
+    queryClient.clear();
+    clearQueryCache();
+
     // Use global scope to sign out from all devices
     const { error } = await supabase.auth.signOut({ scope: 'global' });
-    
+
     // Force clear local state even if server signOut fails (e.g., session already expired)
     setSession(null);
     setUser(null);
-    
+
     return { error };
   };
 
