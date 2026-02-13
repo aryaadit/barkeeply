@@ -40,7 +40,7 @@ export function useDrinks() {
 
   const updateMutation = useMutation({
     mutationFn: ({ id, updates }: { id: string; updates: Partial<Drink> }) =>
-      drinkService.updateDrink(id, updates),
+      drinkService.updateDrink(id, user!.id, updates),
     onMutate: async ({ id, updates }) => {
       await queryClient.cancelQueries({ queryKey: queryKeys.drinks.list(user!.id) });
       const previous = queryClient.getQueryData<Drink[]>(queryKeys.drinks.list(user!.id));
@@ -65,7 +65,7 @@ export function useDrinks() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => drinkService.deleteDrink(id),
+    mutationFn: (id: string) => drinkService.deleteDrink(id, user!.id),
     onMutate: async (id) => {
       await queryClient.cancelQueries({ queryKey: queryKeys.drinks.list(user!.id) });
       const previous = queryClient.getQueryData<Drink[]>(queryKeys.drinks.list(user!.id));

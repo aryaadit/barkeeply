@@ -45,12 +45,14 @@ export async function addCustomDrinkType(
 
 export async function updateCustomDrinkType(
   id: string,
+  userId: string,
   updates: { name?: string; icon?: string; color?: string }
 ): Promise<CustomDrinkType> {
   const { data, error } = await supabase
     .from('custom_drink_types')
     .update(updates)
     .eq('id', id)
+    .eq('user_id', userId)
     .select()
     .single();
 
@@ -63,11 +65,12 @@ export async function updateCustomDrinkType(
   };
 }
 
-export async function deleteCustomDrinkType(id: string): Promise<void> {
+export async function deleteCustomDrinkType(id: string, userId: string): Promise<void> {
   const { error } = await supabase
     .from('custom_drink_types')
     .delete()
-    .eq('id', id);
+    .eq('id', id)
+    .eq('user_id', userId);
 
   if (error) throw error;
 }

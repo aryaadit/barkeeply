@@ -43,7 +43,7 @@ export function useCollections() {
 
   const updateMutation = useMutation({
     mutationFn: ({ id, updates }: { id: string; updates: Partial<Collection> }) =>
-      collectionService.updateCollection(id, updates),
+      collectionService.updateCollection(id, user!.id, updates),
     onMutate: async ({ id, updates }) => {
       await queryClient.cancelQueries({ queryKey: queryKeys.collections.list(user!.id) });
       const previous = queryClient.getQueryData<Collection[]>(
@@ -69,7 +69,7 @@ export function useCollections() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => collectionService.deleteCollection(id),
+    mutationFn: (id: string) => collectionService.deleteCollection(id, user!.id),
     onMutate: async (id) => {
       await queryClient.cancelQueries({ queryKey: queryKeys.collections.list(user!.id) });
       const previous = queryClient.getQueryData<Collection[]>(

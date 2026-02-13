@@ -53,6 +53,7 @@ export async function createCollection(
 
 export async function updateCollection(
   id: string,
+  userId: string,
   updates: Partial<Collection>
 ): Promise<void> {
   const { error } = await supabase
@@ -64,13 +65,18 @@ export async function updateCollection(
       cover_color: updates.coverColor,
       is_public: updates.isPublic,
     })
-    .eq('id', id);
+    .eq('id', id)
+    .eq('user_id', userId);
 
   if (error) throw error;
 }
 
-export async function deleteCollection(id: string): Promise<void> {
-  const { error } = await supabase.from('collections').delete().eq('id', id);
+export async function deleteCollection(id: string, userId: string): Promise<void> {
+  const { error } = await supabase
+    .from('collections')
+    .delete()
+    .eq('id', id)
+    .eq('user_id', userId);
   if (error) throw error;
 }
 

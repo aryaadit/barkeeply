@@ -64,6 +64,7 @@ export async function insertDrink(
 
 export async function updateDrink(
   id: string,
+  userId: string,
   updates: Partial<Drink>
 ): Promise<void> {
   const dbUpdates: Record<string, any> = {};
@@ -81,13 +82,18 @@ export async function updateDrink(
   const { error } = await supabase
     .from('drinks')
     .update(dbUpdates)
-    .eq('id', id);
+    .eq('id', id)
+    .eq('user_id', userId);
 
   if (error) throw error;
 }
 
-export async function deleteDrink(id: string): Promise<void> {
-  const { error } = await supabase.from('drinks').delete().eq('id', id);
+export async function deleteDrink(id: string, userId: string): Promise<void> {
+  const { error } = await supabase
+    .from('drinks')
+    .delete()
+    .eq('id', id)
+    .eq('user_id', userId);
   if (error) throw error;
 }
 

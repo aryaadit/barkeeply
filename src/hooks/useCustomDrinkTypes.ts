@@ -38,7 +38,7 @@ export function useCustomDrinkTypes() {
     }: {
       id: string;
       updates: { name?: string; icon?: string; color?: string };
-    }) => customDrinkTypeService.updateCustomDrinkType(id, updates),
+    }) => customDrinkTypeService.updateCustomDrinkType(id, user!.id, updates),
     onSuccess: (updated) => {
       queryClient.setQueryData<CustomDrinkType[]>(
         queryKeys.customDrinkTypes.list(user!.id),
@@ -49,7 +49,7 @@ export function useCustomDrinkTypes() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => customDrinkTypeService.deleteCustomDrinkType(id),
+    mutationFn: (id: string) => customDrinkTypeService.deleteCustomDrinkType(id, user!.id),
     onMutate: async (id) => {
       await queryClient.cancelQueries({
         queryKey: queryKeys.customDrinkTypes.list(user!.id),
